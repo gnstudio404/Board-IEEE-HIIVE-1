@@ -1,0 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-headline: "Manrope", sans-serif;
+  --font-body: "Manrope", sans-serif;
+  
+  --color-primary: #004c52;
+  --color-primary-container: #00666e;
+  --color-secondary: #964900;
+  --color-secondary-container: #ff8928;
+  --color-tertiary: #69380d;
+  --color-background: #f8f9f9;
+  --color-surface: #f8f9f9;
+  --color-on-surface: #191c1c;
+  --color-on-surface-variant: #3f494a;
+  --color-outline-variant: #bec8ca;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f3f4f4;
+  --color-surface-container-high: #e7e8e8;
+  --color-surface-container-highest: #e1e3e3;
+  --color-on-primary: #ffffff;
+}
+
+@layer base {
+  .dark {
+    --color-background: #020617;
+    --color-surface: #020617;
+    --color-on-surface: #f1f5f9;
+    --color-on-surface-variant: #94a3b8;
+    --color-outline-variant: #1e293b;
+    --color-surface-container-lowest: #0f172a;
+    --color-surface-container-low: #1e293b;
+    --color-surface-container-high: #334155;
+    --color-surface-container-highest: #475569;
+    --color-primary: #2dd4bf;
+    --color-primary-container: #0d9488;
+    --color-on-primary: #042f2e;
+  }
+
+  body {
+    @apply bg-surface font-body text-on-surface transition-colors duration-300;
+  }
+}
+
+@layer components {
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+  
+  .bg-primary-gradient {
+    background: linear-gradient(135deg, #004c52 0%, #00666e 100%);
+  }
+
+  .dark .bg-primary-gradient {
+    background: linear-gradient(135deg, #00373b 0%, #004c52 100%);
+  }
+  
+  .hive-shadow {
+    box-shadow: 0px 12px 32px rgba(0, 76, 82, 0.06);
+  }
+
+  .dark .hive-shadow {
+    box-shadow: 0px 12px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  .clip-path-polygon {
+    clip-path: polygon(20% 0%, 100% 0%, 100% 100%, 0% 100%);
+  }
+}
+
+@custom-variant dark (&:where(.dark, .dark *));

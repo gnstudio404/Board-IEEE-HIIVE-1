@@ -1,0 +1,113 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "System user with role-based access",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "department": { "type": "string" },
+        "role": { "type": "string", "enum": ["applicant", "admin"] },
+        "completedTest": { "type": "boolean" },
+        "assignedTeamId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "name", "email", "role"]
+    },
+    "Question": {
+      "title": "Question",
+      "description": "MCQ test question",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "text": { "type": "string" },
+              "weights": {
+                "type": "object",
+                "properties": {
+                  "leadership": { "type": "number" },
+                  "organization": { "type": "number" },
+                  "communication": { "type": "number" },
+                  "creativity": { "type": "number" },
+                  "analysis": { "type": "number" },
+                  "execution": { "type": "number" }
+                }
+              }
+            }
+          }
+        },
+        "active": { "type": "boolean" },
+        "order": { "type": "number" }
+      },
+      "required": ["text", "options", "active"]
+    },
+    "Response": {
+      "title": "Response",
+      "description": "Individual answer to a question",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "questionId": { "type": "string" },
+        "selectedOptionIndex": { "type": "number" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "questionId", "selectedOptionIndex"]
+    },
+    "Score": {
+      "title": "Score",
+      "description": "Calculated profile for a user",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "leadership": { "type": "number" },
+        "organization": { "type": "number" },
+        "communication": { "type": "number" },
+        "creativity": { "type": "number" },
+        "analysis": { "type": "number" },
+        "execution": { "type": "number" },
+        "primaryTrait": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId"]
+    },
+    "Team": {
+      "title": "Team",
+      "description": "A balanced team",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "minSize": { "type": "number" },
+        "maxSize": { "type": "number" },
+        "memberCount": { "type": "number" }
+      },
+      "required": ["name", "minSize", "maxSize"]
+    },
+    "Assignment": {
+      "title": "Assignment",
+      "description": "Mapping of user to team",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "teamId": { "type": "string" },
+        "assignedBy": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "teamId"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": { "schema": "User", "description": "User profiles" },
+    "/questions/{questionId}": { "schema": "Question", "description": "Test questions" },
+    "/responses/{responseId}": { "schema": "Response", "description": "User test responses" },
+    "/scores/{userId}": { "schema": "Score", "description": "Calculated user profiles" },
+    "/teams/{teamId}": { "schema": "Team", "description": "Team definitions" },
+    "/assignments/{assignmentId}": { "schema": "Assignment", "description": "Team assignments" }
+  }
+}
