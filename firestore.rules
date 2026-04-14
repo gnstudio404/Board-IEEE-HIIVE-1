@@ -6,22 +6,16 @@ service cloud.firestore {
     // ===============================================================
     //
     // Collection: users
-    // Fields: uid, name, email, phone, department, role, completedTest, assignedTeamId, createdAt
+    // Fields: uid, name, email, role, createdAt
     //
-    // Collection: questions
-    // Fields: text, options (array), active, order
+    // Collection: masterStudents
+    // Fields: name, email, studentId, department
     //
-    // Collection: responses
-    // Fields: userId, questionId, selectedOptionIndex, timestamp
+    // Collection: sessions
+    // Fields: name, date, description, createdAt
     //
-    // Collection: scores
-    // Fields: userId, leadership, organization, communication, creativity, analysis, execution, primaryTrait, updatedAt
-    //
-    // Collection: teams
-    // Fields: name, minSize, maxSize, memberCount
-    //
-    // Collection: assignments
-    // Fields: userId, teamId, assignedBy, timestamp
+    // Collection: attendance
+    // Fields: sessionId, studentEmail, studentName, status, timestamp
     //
     // ===============================================================
 
@@ -40,20 +34,12 @@ service cloud.firestore {
     function isAdmin() {
       return isAuthenticated() && (
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
-        (request.auth.token.email == "gif88bb67gft7v@gmail.com" && request.auth.token.email_verified == true)
+        (request.auth.token.email == "mrmostafash187@gmail.com" && request.auth.token.email_verified == true)
       );
     }
 
     function hasRequiredFields(fields) {
       return request.resource.data.keys().hasAll(fields);
-    }
-
-    function hasOnlyAllowedFields(fields) {
-      return request.resource.data.keys().hasOnly(fields);
-    }
-
-    function isValidEmail(email) {
-      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
     }
 
     // ===============================================================
@@ -65,16 +51,23 @@ service cloud.firestore {
              data.uid == request.auth.uid &&
              data.email == request.auth.token.email &&
              data.role in ['applicant', 'admin'] &&
-             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
-             (!('phone' in data) || (data.phone is string && data.phone.size() < 20)) &&
-             (!('department' in data) || (data.department is string && data.department.size() < 50));
+             data.name is string && data.name.size() > 0 && data.name.size() < 100;
     }
 
-    function isValidResponse(data) {
-      return hasRequiredFields(['userId', 'questionId', 'selectedOptionIndex']) &&
-             data.userId == request.auth.uid &&
-             data.selectedOptionIndex is int &&
-             data.questionId is string && data.questionId.size() < 50;
+    function isValidMasterStudent(data) {
+      return hasRequiredFields(['name', 'email']) &&
+             data.name is string && data.name.size() > 0 &&
+             data.email is string && data.email.size() > 0;
+    }
+
+    function isValidSession(data) {
+      return hasRequiredFields(['name', 'date']) &&
+             data.name is string && data.name.size() > 0;
+    }
+
+    function isValidAttendance(data) {
+      return hasRequiredFields(['sessionId', 'studentEmail', 'status']) &&
+             data.status in ['present', 'absent'];
     }
 
     // ===============================================================
@@ -91,30 +84,17 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    match /questions/{questionId} {
+    match /masterStudents/{studentId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /sessions/{sessionId} {
       allow read: if isAuthenticated();
       allow write: if isAdmin();
     }
 
-    match /responses/{responseId} {
-      allow read: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
-      allow create: if isAuthenticated() && isValidResponse(request.resource.data);
-      allow update, delete: if isAdmin();
-    }
-
-    match /scores/{userId} {
-      allow read: if isAuthenticated() && (isOwner(userId) || isAdmin());
-      allow write: if isAdmin() || (isOwner(userId) && hasRequiredFields(['userId']));
-      allow delete: if isAdmin();
-    }
-
-    match /teams/{teamId} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin();
-    }
-
-    match /assignments/{assignmentId} {
-      allow read: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
+    match /attendance/{attendanceId} {
+      allow read: if isAdmin() || (isAuthenticated() && request.auth.token.email == resource.data.studentEmail);
       allow write: if isAdmin();
     }
   }

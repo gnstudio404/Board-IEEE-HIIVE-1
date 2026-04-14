@@ -21,6 +21,14 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     try {
+      // Check if email is blocked
+      const blockedDoc = await getDoc(doc(db, 'blockedEmails', email.toLowerCase()));
+      if (blockedDoc.exists()) {
+        toast.error(language === 'ar' ? 'هذا الحساب محظور من الدخول.' : 'This account is blocked from access.');
+        setLoading(false);
+        return;
+      }
+
       await signInWithEmailAndPassword(auth, email, password);
       toast.success(language === 'ar' ? 'مرحباً بعودتك!' : 'Welcome back!');
       navigate('/');
@@ -38,6 +46,15 @@ export default function Login() {
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
+
+      // Check if email is blocked
+      const blockedDoc = await getDoc(doc(db, 'blockedEmails', user.email?.toLowerCase() || ''));
+      if (blockedDoc.exists()) {
+        await auth.signOut();
+        toast.error(language === 'ar' ? 'هذا الحساب محظور من الدخول.' : 'This account is blocked from access.');
+        setGoogleLoading(false);
+        return;
+      }
       
       const path = `users/${user.uid}`;
       let userDoc;
@@ -49,7 +66,7 @@ export default function Login() {
       }
 
       if (!userDoc.exists()) {
-        const role = user.email === 'gif88bb67gft7v@gmail.com' ? 'admin' : 'applicant';
+        const role = user.email === 'mrmostafash187@gmail.com' ? 'admin' : 'applicant';
         try {
           await setDoc(doc(db, 'users', user.uid), {
             uid: user.uid,

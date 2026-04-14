@@ -29,9 +29,17 @@ export default function Register() {
     e.preventDefault();
     setLoading(true);
     try {
+      // Check if email is blocked
+      const blockedDoc = await getDoc(doc(db, 'blockedEmails', formData.email.toLowerCase()));
+      if (blockedDoc.exists()) {
+        toast.error(language === 'ar' ? 'هذا البريد الإلكتروني محظور من التسجيل.' : 'This email is blocked from registration.');
+        setLoading(false);
+        return;
+      }
+
       const { user } = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       
-      const role = formData.email === 'gif88bb67gft7v@gmail.com' ? 'admin' : 'applicant';
+      const role = formData.email === 'mrmostafash187@gmail.com' ? 'admin' : 'applicant';
 
       const path = `users/${user.uid}`;
       try {
@@ -64,6 +72,14 @@ export default function Register() {
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
+
+      // Check if email is blocked
+      const blockedDoc = await getDoc(doc(db, 'blockedEmails', user.email?.toLowerCase() || ''));
+      if (blockedDoc.exists()) {
+        await auth.signOut();
+        toast.error(language === 'ar' ? 'هذا الحساب محظور من الدخول.' : 'This account is blocked from access.');
+        return;
+      }
       
       const path = `users/${user.uid}`;
       let userDoc;
@@ -75,7 +91,7 @@ export default function Register() {
       }
 
       if (!userDoc.exists()) {
-        const role = user.email === 'gif88bb67gft7v@gmail.com' ? 'admin' : 'applicant';
+        const role = user.email === 'mrmostafash187@gmail.com' ? 'admin' : 'applicant';
         try {
           await setDoc(doc(db, 'users', user.uid), {
             uid: user.uid,

@@ -23,14 +23,13 @@ export default function Layout() {
   const navItems = isAdmin 
     ? [
         { name: t('nav.dashboard'), path: '/admin', icon: 'dashboard' },
-        { name: t('nav.users'), path: '/admin/applicants', icon: 'group' },
-        { name: t('nav.questions'), path: '/admin/questions', icon: 'quiz' },
-        { name: t('nav.teams'), path: '/admin/teams', icon: 'diversity_3' },
+        { name: t('nav.students'), path: '/admin/students', icon: 'group' },
+        { name: t('nav.sessions'), path: '/admin/sessions', icon: 'event' },
+        { name: t('nav.attendance'), path: '/admin/attendance', icon: 'fact_check' },
+        { name: t('nav.users'), path: '/admin/users', icon: 'shield_person' },
       ]
     : [
-        { name: t('nav.home'), path: '/', icon: 'dashboard' },
-        { name: t('nav.teams'), path: '/teams', icon: 'groups' },
-        { name: t('nav.takeTest'), path: '/test', icon: 'help_outline' },
+        { name: t('nav.home'), path: '/', icon: 'home' },
         { name: t('nav.profile'), path: '/profile', icon: 'account_circle' },
       ];
 

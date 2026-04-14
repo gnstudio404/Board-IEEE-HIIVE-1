@@ -5,17 +5,16 @@ import { LanguageProvider } from './context/LanguageContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { Toaster } from 'sonner';
 
-// Pages (to be created)
+// Pages
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ApplicantHome from './pages/ApplicantHome';
-import ApplicantTeams from './pages/ApplicantTeams';
 import Profile from './pages/Profile';
-import TestPage from './pages/TestPage';
 import AdminDashboard from './pages/AdminDashboard';
-import AdminQuestions from './pages/AdminQuestions';
-import AdminTeams from './pages/AdminTeams';
-import AdminApplicants from './pages/AdminApplicants';
+import AdminSessions from './pages/AdminSessions';
+import AdminAttendance from './pages/AdminAttendance';
+import AdminStudents from './pages/AdminStudents';
+import AdminUsers from './pages/AdminUsers';
 import Layout from './components/Layout';
 
 const ProtectedRoute = ({ children, adminOnly = false }: { children: React.ReactNode, adminOnly?: boolean }) => {
@@ -40,15 +39,14 @@ function AppRoutes() {
       
       <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route index element={isAdmin ? <Navigate to="/admin" replace /> : <ApplicantHome />} />
-        <Route path="test" element={<TestPage />} />
-        <Route path="teams" element={<ApplicantTeams />} />
         <Route path="profile" element={<Profile />} />
         
         {/* Admin Routes */}
         <Route path="admin" element={<ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>} />
-        <Route path="admin/questions" element={<ProtectedRoute adminOnly><AdminQuestions /></ProtectedRoute>} />
-        <Route path="admin/teams" element={<ProtectedRoute adminOnly><AdminTeams /></ProtectedRoute>} />
-        <Route path="admin/applicants" element={<ProtectedRoute adminOnly><AdminApplicants /></ProtectedRoute>} />
+        <Route path="admin/sessions" element={<ProtectedRoute adminOnly><AdminSessions /></ProtectedRoute>} />
+        <Route path="admin/attendance" element={<ProtectedRoute adminOnly><AdminAttendance /></ProtectedRoute>} />
+        <Route path="admin/students" element={<ProtectedRoute adminOnly><AdminStudents /></ProtectedRoute>} />
+        <Route path="admin/users" element={<ProtectedRoute adminOnly><AdminUsers /></ProtectedRoute>} />
       </Route>
     </Routes>
   );

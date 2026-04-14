@@ -5,73 +5,36 @@ export interface UserProfile {
   name: string;
   email: string;
   photoURL?: string;
-  phone?: string;
-  department?: string;
-  bio?: string;
-  country?: string;
   role: UserRole;
-  completedTest: boolean;
-  assignedTeamId?: string | null;
   createdAt: string;
 }
 
-export interface DimensionWeights {
-  leadership: number;
-  organization: number;
-  communication: number;
-  creativity: number;
-  analysis: number;
-  execution: number;
-}
-
-export interface QuestionOption {
-  text: string;
-  textAr?: string;
-  weights: DimensionWeights;
-}
-
-export interface Question {
-  id: string;
-  text: string;
-  textAr?: string;
-  options: QuestionOption[];
-  active: boolean;
-  order: number;
-}
-
-export interface TestResponse {
-  id?: string;
-  userId: string;
-  questionId: string;
-  selectedOptionIndex: number;
-  timestamp: string;
-}
-
-export interface UserScore {
-  userId: string;
-  leadership: number;
-  organization: number;
-  communication: number;
-  creativity: number;
-  analysis: number;
-  execution: number;
-  primaryTrait: keyof DimensionWeights;
-  secondaryTrait: keyof DimensionWeights;
-  updatedAt: string;
-}
-
-export interface Team {
+export interface MasterStudent {
   id: string;
   name: string;
-  minSize: number;
-  maxSize: number;
-  memberCount: number;
+  email: string;
+  phone?: string;
+  department?: string;
+  country?: string;
+  role?: string;
+  testStatus?: string;
+  team?: string;
+  createdAt?: string;
 }
 
-export interface Assignment {
+export interface Session {
   id: string;
-  userId: string;
-  teamId: string;
-  assignedBy: string;
+  name: string;
+  date: string;
+  description?: string;
+  createdAt: string;
+}
+
+export interface AttendanceRecord {
+  id: string;
+  sessionId: string;
+  studentEmail: string;
+  studentName: string;
+  status: 'present' | 'absent';
   timestamp: string;
 }
