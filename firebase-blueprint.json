@@ -49,12 +49,24 @@
         "timestamp": { "type": "string", "format": "date-time" }
       },
       "required": ["sessionId", "studentEmail", "status"]
+    },
+    "BlockedEmail": {
+      "title": "Blocked Email",
+      "description": "Email addresses blocked from registration",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "blockedAt": { "type": "string", "format": "date-time" },
+        "reason": { "type": "string" }
+      },
+      "required": ["email", "blockedAt"]
     }
   },
   "firestore": {
     "/users/{userId}": { "schema": "User", "description": "User profiles" },
     "/masterStudents/{studentId}": { "schema": "MasterStudent", "description": "Master list of students" },
     "/sessions/{sessionId}": { "schema": "Session", "description": "Attendance sessions" },
-    "/attendance/{attendanceId}": { "schema": "Attendance", "description": "Attendance records" }
+    "/attendance/{attendanceId}": { "schema": "Attendance", "description": "Attendance records" },
+    "/blockedEmails/{email}": { "schema": "BlockedEmail", "description": "Blocked email addresses" }
   }
 }

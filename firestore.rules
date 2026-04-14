@@ -17,6 +17,9 @@ service cloud.firestore {
     // Collection: attendance
     // Fields: sessionId, studentEmail, studentName, status, timestamp
     //
+    // Collection: blockedEmails
+    // Fields: email, blockedAt, reason
+    //
     // ===============================================================
 
     // ===============================================================
@@ -42,31 +45,37 @@ service cloud.firestore {
       return request.resource.data.keys().hasAll(fields);
     }
 
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
     // ===============================================================
     // Domain Validators
     // ===============================================================
 
     function isValidUser(data) {
       return hasRequiredFields(['uid', 'name', 'email', 'role']) &&
-             data.uid == request.auth.uid &&
-             data.email == request.auth.token.email &&
+             data.uid is string && data.uid.size() > 0 &&
+             data.email is string && isValidEmail(data.email) &&
              data.role in ['applicant', 'admin'] &&
              data.name is string && data.name.size() > 0 && data.name.size() < 100;
     }
 
     function isValidMasterStudent(data) {
       return hasRequiredFields(['name', 'email']) &&
-             data.name is string && data.name.size() > 0 &&
-             data.email is string && data.email.size() > 0;
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.email is string && isValidEmail(data.email);
     }
 
     function isValidSession(data) {
       return hasRequiredFields(['name', 'date']) &&
-             data.name is string && data.name.size() > 0;
+             data.name is string && data.name.size() > 0 && data.name.size() < 100;
     }
 
     function isValidAttendance(data) {
       return hasRequiredFields(['sessionId', 'studentEmail', 'status']) &&
+             data.sessionId is string &&
+             data.studentEmail is string &&
              data.status in ['present', 'absent'];
     }
 
@@ -95,6 +104,11 @@ service cloud.firestore {
 
     match /attendance/{attendanceId} {
       allow read: if isAdmin() || (isAuthenticated() && request.auth.token.email == resource.data.studentEmail);
+      allow write: if isAdmin();
+    }
+
+    match /blockedEmails/{email} {
+      allow read: if true; // Needed for checking during registration
       allow write: if isAdmin();
     }
   }
