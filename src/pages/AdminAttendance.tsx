@@ -4,7 +4,7 @@ import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { AttendanceRecord, Session } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
-import { Search, Filter, Download, Users, CheckCircle, XCircle, BarChart3, PieChart as PieChartIcon, Trash2 } from 'lucide-react';
+import { Search, Filter, Download, Users, CheckCircle, XCircle, BarChart3, PieChart as PieChartIcon, Trash2, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 
@@ -111,10 +111,13 @@ export default function AdminAttendance() {
             <Trash2 className="w-4 h-4" />
             {language === 'ar' ? 'مسح الكل' : 'Clear All'}
           </button>
-          <div className="relative">
-            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant" />
+          <div className="relative group">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none">
+              <Filter className="w-4 h-4 text-primary" />
+              <div className="w-px h-4 bg-outline-variant/20 mx-1" />
+            </div>
             <select 
-              className="pl-10 pr-4 py-2 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-primary/20 transition-all text-sm font-medium"
+              className="appearance-none pl-12 pr-10 py-2.5 bg-surface-container-low border border-outline-variant/10 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all text-sm font-bold text-on-surface cursor-pointer hover:bg-surface-container-high shadow-sm"
               value={selectedSession}
               onChange={(e) => setSelectedSession(e.target.value)}
             >
@@ -123,6 +126,7 @@ export default function AdminAttendance() {
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}
             </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant pointer-events-none group-hover:text-primary transition-colors" />
           </div>
         </div>
       </div>
