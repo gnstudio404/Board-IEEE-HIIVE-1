@@ -9,6 +9,7 @@ interface AuthContextType {
   profile: UserProfile | null;
   loading: boolean;
   isAdmin: boolean;
+  isSuperAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -16,6 +17,7 @@ const AuthContext = createContext<AuthContextType>({
   profile: null,
   loading: true,
   isAdmin: false,
+  isSuperAdmin: false,
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -55,9 +57,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [user]);
 
   const isAdmin = profile?.role === 'admin';
+  const isSuperAdmin = user?.email === 'omarwork1011@gmail.com';
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, isAdmin }}>
+    <AuthContext.Provider value={{ user, profile, loading, isAdmin, isSuperAdmin }}>
       {children}
     </AuthContext.Provider>
   );

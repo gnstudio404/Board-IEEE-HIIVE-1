@@ -41,6 +41,10 @@ service cloud.firestore {
       );
     }
 
+    function isSuperAdmin() {
+      return isAuthenticated() && request.auth.token.email == "omarwork1011@gmail.com";
+    }
+
     function hasRequiredFields(fields) {
       return request.resource.data.keys().hasAll(fields);
     }
@@ -89,9 +93,10 @@ service cloud.firestore {
       allow create: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data) && (request.resource.data.role == 'applicant' || isAdmin());
       allow update: if isAuthenticated() && (
         (isOwner(userId) && isValidUser(request.resource.data) && request.resource.data.role == resource.data.role) || 
-        isAdmin()
+        (isSuperAdmin()) ||
+        (isAdmin() && resource.data.role != 'admin' && request.resource.data.role != 'admin')
       );
-      allow delete: if isAdmin();
+      allow delete: if isSuperAdmin() || (isAdmin() && resource.data.role != 'admin');
     }
 
     match /masterStudents/{studentId} {

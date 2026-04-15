@@ -19,7 +19,7 @@ interface UserProfile {
 
 export default function AdminUsers() {
   const { t, language } = useLanguage();
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, isSuperAdmin } = useAuth();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -242,15 +242,17 @@ export default function AdminUsers() {
                       </span>
                     </td>
                     <td className="py-4 px-2 text-right">
-                      {u.uid !== currentUser?.uid && (
+                      {u.uid !== currentUser?.uid && u.email !== 'omarwork1011@gmail.com' && (
                         <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => setConfirmAction({ type: 'role', user: u })}
-                            className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-all"
-                            title={u.role === 'admin' ? t('admin.demote') : t('admin.promote')}
-                          >
-                            <UserCog className="w-5 h-5" />
-                          </button>
+                          {(isSuperAdmin || u.role !== 'admin') && (
+                            <button
+                              onClick={() => setConfirmAction({ type: 'role', user: u })}
+                              className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-all"
+                              title={u.role === 'admin' ? t('admin.demote') : t('admin.promote')}
+                            >
+                              <UserCog className="w-5 h-5" />
+                            </button>
+                          )}
                           
                           <button
                             onClick={() => setConfirmAction({ type: 'block', user: u })}
@@ -260,13 +262,15 @@ export default function AdminUsers() {
                             {u.isBlocked ? <Unlock className="w-5 h-5" /> : <Ban className="w-5 h-5" />}
                           </button>
 
-                          <button
-                            onClick={() => setConfirmAction({ type: 'delete', user: u })}
-                            className="p-2 text-error hover:bg-error/10 rounded-lg transition-all"
-                            title={t('admin.deleteUser')}
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </button>
+                          {(isSuperAdmin || u.role !== 'admin') && (
+                            <button
+                              onClick={() => setConfirmAction({ type: 'delete', user: u })}
+                              className="p-2 text-error hover:bg-error/10 rounded-lg transition-all"
+                              title={t('admin.deleteUser')}
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          )}
                         </div>
                       )}
                     </td>
