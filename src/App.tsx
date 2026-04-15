@@ -15,6 +15,7 @@ import AdminSessions from './pages/AdminSessions';
 import AdminAttendance from './pages/AdminAttendance';
 import AdminStudents from './pages/AdminStudents';
 import AdminUsers from './pages/AdminUsers';
+import MemberProfile from './pages/MemberProfile';
 import Layout from './components/Layout';
 
 const ProtectedRoute = ({ children, adminOnly = false }: { children: React.ReactNode, adminOnly?: boolean }) => {
@@ -47,6 +48,7 @@ function AppRoutes() {
         <Route path="admin/attendance" element={<ProtectedRoute adminOnly><AdminAttendance /></ProtectedRoute>} />
         <Route path="admin/students" element={<ProtectedRoute adminOnly><AdminStudents /></ProtectedRoute>} />
         <Route path="admin/users" element={<ProtectedRoute adminOnly><AdminUsers /></ProtectedRoute>} />
+        <Route path="member/:uid" element={<ProtectedRoute><MemberProfile /></ProtectedRoute>} />
       </Route>
     </Routes>
   );

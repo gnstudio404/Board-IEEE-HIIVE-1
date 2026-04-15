@@ -10,6 +10,19 @@
         "email": { "type": "string" },
         "role": { "type": "string", "enum": ["applicant", "admin"] },
         "title": { "type": "string" },
+        "skills": { "type": "array", "items": { "type": "string" } },
+        "projects": { 
+          "type": "array", 
+          "items": { 
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "description": { "type": "string" },
+              "link": { "type": "string" }
+            }
+          } 
+        },
+        "badges": { "type": "array", "items": { "type": "string" } },
         "isBlocked": { "type": "boolean" },
         "createdAt": { "type": "string", "format": "date-time" }
       },

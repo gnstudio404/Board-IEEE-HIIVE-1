@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, query, where, orderBy, writeBatch, doc } from 'firebase/firestore';
+import { collection, getDocs, query, where, orderBy, writeBatch, doc, limit } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { AttendanceRecord, Session } from '../types';
 import { useLanguage } from '../context/LanguageContext';
+import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
-import { Search, Filter, Download, Users, CheckCircle, XCircle, BarChart3, PieChart as PieChartIcon, Trash2, ChevronDown } from 'lucide-react';
+import { Search, Filter, Download, Users, CheckCircle, XCircle, BarChart3, PieChart as PieChartIcon, Trash2, ChevronDown, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 
 export default function AdminAttendance() {
   const { t, language } = useLanguage();
+  const navigate = useNavigate();
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
@@ -257,7 +259,30 @@ export default function AdminAttendance() {
               ) : (
                 filteredRecords.map((record) => (
                   <tr key={record.id} className="hover:bg-surface-container-low/50 transition-colors">
-                    <td className="py-4 px-2 font-medium">{record.studentName}</td>
+                    <td className="py-4 px-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{record.studentName}</span>
+                        <button 
+                          onClick={async () => {
+                            try {
+                              const q = query(collection(db, 'users'), where('email', '==', record.studentEmail), limit(1));
+                              const snap = await getDocs(q);
+                              if (!snap.empty) {
+                                navigate(`/member/${snap.docs[0].id}`);
+                              } else {
+                                toast.error(language === 'ar' ? 'هذا الطالب لم يسجل حسابه بعد' : 'This student has not registered their account yet');
+                              }
+                            } catch (e) {
+                              console.error(e);
+                            }
+                          }}
+                          className="p-1 text-primary hover:bg-primary/10 rounded-full transition-all"
+                          title={language === 'ar' ? 'عرض الملف الذكي' : 'View Smart Profile'}
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
                     <td className="py-4 px-2 text-on-surface-variant text-sm">{record.studentEmail}</td>
                     <td className="py-4 px-2">
                       <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${

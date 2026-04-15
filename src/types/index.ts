@@ -6,6 +6,15 @@ export interface UserProfile {
   email: string;
   photoURL?: string;
   role: UserRole;
+  title?: string;
+  bio?: string;
+  phone?: string;
+  department?: string;
+  country?: string;
+  skills?: string[];
+  badges?: string[];
+  projects?: { name: string; description: string; link?: string }[];
+  isBlocked?: boolean;
   createdAt: string;
 }
 

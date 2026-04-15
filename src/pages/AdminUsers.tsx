@@ -3,8 +3,9 @@ import { collection, getDocs, doc, updateDoc, deleteDoc, setDoc, getDoc } from '
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Shield, User, Search, ShieldCheck, UserCog, UserMinus, Ban, Unlock, Trash2 } from 'lucide-react';
+import { Shield, User, Search, ShieldCheck, UserCog, UserMinus, Ban, Unlock, Trash2, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface UserProfile {
@@ -19,6 +20,7 @@ interface UserProfile {
 
 export default function AdminUsers() {
   const { t, language } = useLanguage();
+  const navigate = useNavigate();
   const { user: currentUser, isSuperAdmin } = useAuth();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -177,11 +179,20 @@ export default function AdminUsers() {
                           />
                         </div>
                         <div>
-                          <p className="font-bold text-on-surface flex items-center gap-2">
-                            {u.name}
-                            {u.isBlocked && <Ban className="w-3.5 h-3.5 text-error" />}
-                          </p>
                           <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                              <p className="font-bold text-on-surface">
+                                {u.name}
+                              </p>
+                              {u.isBlocked && <Ban className="w-3.5 h-3.5 text-error" />}
+                              <button 
+                                onClick={() => navigate(`/member/${u.uid}`)}
+                                className="p-1 text-primary hover:bg-primary/10 rounded-full transition-all"
+                                title={language === 'ar' ? 'عرض الملف الذكي' : 'View Smart Profile'}
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                             {editingTitle?.uid === u.uid ? (
                               <div className="flex items-center gap-2 mt-1">
                                 <input 

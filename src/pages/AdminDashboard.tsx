@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, limit, where } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { Session, MasterStudent, AttendanceRecord } from '../types';
 import { useLanguage } from '../context/LanguageContext';
@@ -147,13 +147,44 @@ export default function AdminDashboard() {
               stats.recentAttendance.map((record, i) => (
                 <div key={i} className="flex items-center justify-between p-4 bg-surface-container-low/50 rounded-2xl border border-outline-variant/5">
                   <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-                      record.status === 'present' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'
-                    }`}>
+                    <button 
+                      onClick={() => {
+                        // We need the UID, but we only have email in the record.
+                        // We'll search for the user by email.
+                        const fetchAndNavigate = async () => {
+                          try {
+                            const q = query(collection(db, 'users'), where('email', '==', record.studentEmail), limit(1));
+                            const snap = await getDocs(q);
+                            if (!snap.empty) {
+                              navigate(`/member/${snap.docs[0].id}`);
+                            }
+                          } catch (e) {
+                            console.error(e);
+                          }
+                        };
+                        fetchAndNavigate();
+                      }}
+                      className="w-10 h-10 rounded-full flex items-center justify-center font-bold hover:scale-110 transition-transform cursor-pointer shadow-sm border border-outline-variant/10 bg-surface-container-highest text-primary"
+                    >
                       {record.studentName.charAt(0)}
-                    </div>
-                    <div>
-                      <p className="font-bold text-on-surface">{record.studentName}</p>
+                    </button>
+                    <div className="text-left">
+                      <button 
+                        onClick={async () => {
+                          try {
+                            const q = query(collection(db, 'users'), where('email', '==', record.studentEmail), limit(1));
+                            const snap = await getDocs(q);
+                            if (!snap.empty) {
+                              navigate(`/member/${snap.docs[0].id}`);
+                            }
+                          } catch (e) {
+                            console.error(e);
+                          }
+                        }}
+                        className="font-bold text-on-surface hover:text-primary transition-colors text-left block"
+                      >
+                        {record.studentName}
+                      </button>
                       <p className="text-xs text-on-surface-variant">{record.studentEmail}</p>
                     </div>
                   </div>
