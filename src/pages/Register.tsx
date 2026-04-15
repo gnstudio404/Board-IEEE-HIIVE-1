@@ -39,7 +39,7 @@ export default function Register() {
 
       const { user } = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       
-      const role = formData.email === 'mrmostafash187@gmail.com' ? 'admin' : 'applicant';
+      const role = formData.email === 'omarwork1011@gmail.com' ? 'admin' : 'applicant';
 
       const path = `users/${user.uid}`;
       try {
@@ -91,7 +91,7 @@ export default function Register() {
       }
 
       if (!userDoc.exists()) {
-        const role = user.email === 'mrmostafash187@gmail.com' ? 'admin' : 'applicant';
+        const role = user.email === 'omarwork1011@gmail.com' ? 'admin' : 'applicant';
         try {
           await setDoc(doc(db, 'users', user.uid), {
             uid: user.uid,

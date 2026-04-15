@@ -78,7 +78,7 @@ export default function Login() {
       }
 
       if (!userDoc.exists()) {
-        const role = user.email === 'mrmostafash187@gmail.com' ? 'admin' : 'applicant';
+        const role = user.email === 'omarwork1011@gmail.com' ? 'admin' : 'applicant';
         const path = `users/${user.uid}`;
         try {
           await setDoc(doc(db, 'users', user.uid), {
