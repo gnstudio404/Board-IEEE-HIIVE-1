@@ -3,6 +3,7 @@ import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { Session, MasterStudent, AttendanceRecord } from '../types';
 import { useLanguage } from '../context/LanguageContext';
+import { useNavigate } from 'react-router-dom';
 import { 
   Users, 
   Calendar, 
@@ -20,6 +21,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 
 export default function AdminDashboard() {
   const { t, language } = useLanguage();
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalStudents: 0,
     totalSessions: 0,
@@ -129,7 +131,10 @@ export default function AdminDashboard() {
               <Activity className="w-5 h-5 text-primary" />
               {language === 'ar' ? 'نشاط الحضور الأخير' : 'Recent Attendance Activity'}
             </h3>
-            <button className="text-primary text-sm font-bold flex items-center gap-1 hover:underline">
+            <button 
+              onClick={() => navigate('/admin/attendance')}
+              className="text-primary text-sm font-bold flex items-center gap-1 hover:underline"
+            >
               {language === 'ar' ? 'عرض الكل' : 'View All'}
               <ArrowUpRight className="w-4 h-4" />
             </button>
@@ -174,15 +179,24 @@ export default function AdminDashboard() {
             {language === 'ar' ? 'إجراءات سريعة' : 'Quick Actions'}
           </h3>
           <div className="space-y-3">
-            <button className="w-full flex items-center justify-between p-4 bg-primary/5 text-primary rounded-2xl hover:bg-primary/10 transition-colors group">
+            <button 
+              onClick={() => navigate('/admin/students')}
+              className="w-full flex items-center justify-between p-4 bg-primary/5 text-primary rounded-2xl hover:bg-primary/10 transition-colors group"
+            >
               <span className="font-bold">{t('admin.uploadMaster')}</span>
               <ArrowUpRight className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
             </button>
-            <button className="w-full flex items-center justify-between p-4 bg-purple-500/5 text-purple-600 rounded-2xl hover:bg-purple-500/10 transition-colors group">
+            <button 
+              onClick={() => navigate('/admin/sessions')}
+              className="w-full flex items-center justify-between p-4 bg-purple-500/5 text-purple-600 rounded-2xl hover:bg-purple-500/10 transition-colors group"
+            >
               <span className="font-bold">{t('admin.addSession')}</span>
               <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" />
             </button>
-            <button className="w-full flex items-center justify-between p-4 bg-emerald-500/5 text-emerald-600 rounded-2xl hover:bg-emerald-500/10 transition-colors group">
+            <button 
+              onClick={() => navigate('/admin/attendance')}
+              className="w-full flex items-center justify-between p-4 bg-emerald-500/5 text-emerald-600 rounded-2xl hover:bg-emerald-500/10 transition-colors group"
+            >
               <span className="font-bold">{language === 'ar' ? 'تصدير التقارير' : 'Export Reports'}</span>
               <Download className="w-5 h-5 group-hover:translate-y-1 transition-transform" />
             </button>
