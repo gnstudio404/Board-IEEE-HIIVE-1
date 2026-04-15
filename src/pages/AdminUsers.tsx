@@ -59,28 +59,37 @@ export default function AdminUsers() {
 
   const handleToggleBlock = async (targetUser: UserProfile) => {
     const isBlocked = !targetUser.isBlocked;
+    const email = targetUser.email?.toLowerCase().trim();
+    
+    if (!email) {
+      toast.error(language === 'ar' ? 'البريد الإلكتروني للمستخدم غير موجود' : 'User email is missing');
+      return;
+    }
+
     try {
       // 1. Update user profile
       await updateDoc(doc(db, 'users', targetUser.uid), { isBlocked });
       
       // 2. Manage blockedEmails collection for registration prevention
       if (isBlocked) {
-        await setDoc(doc(db, 'blockedEmails', targetUser.email.toLowerCase()), {
-          email: targetUser.email.toLowerCase(),
+        await setDoc(doc(db, 'blockedEmails', email), {
+          email: email,
           blockedAt: new Date().toISOString(),
           reason: 'Admin block'
         });
       } else {
-        await deleteDoc(doc(db, 'blockedEmails', targetUser.email.toLowerCase()));
+        // Use a safe delete that doesn't crash if doc doesn't exist
+        await deleteDoc(doc(db, 'blockedEmails', email));
       }
 
       toast.success(isBlocked 
         ? (language === 'ar' ? 'تم حظر المستخدم' : 'User blocked') 
-        : (language === 'ar' ? 'تم فك الحظر' : 'User unblocked')
+        : (language === 'ar' ? 'تم فك الحظر بنجاح' : 'User unblocked successfully')
       );
       fetchUsers();
     } catch (error) {
-      toast.error('Error toggling block');
+      console.error("Error toggling block:", error);
+      toast.error(language === 'ar' ? 'حدث خطأ أثناء تغيير حالة الحظر' : 'Error toggling block status');
     } finally {
       setConfirmAction(null);
     }

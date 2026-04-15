@@ -22,14 +22,25 @@ export default function Login() {
     setLoading(true);
     try {
       // Check if email is blocked
-      const blockedDoc = await getDoc(doc(db, 'blockedEmails', email.toLowerCase()));
+      const blockedDoc = await getDoc(doc(db, 'blockedEmails', email.toLowerCase().trim()));
       if (blockedDoc.exists()) {
         toast.error(language === 'ar' ? 'هذا الحساب محظور من الدخول.' : 'This account is blocked from access.');
         setLoading(false);
         return;
       }
 
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Secondary check: isBlocked field in user document
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (userDoc.exists() && userDoc.data()?.isBlocked === true) {
+        await auth.signOut();
+        toast.error(language === 'ar' ? 'هذا الحساب محظور من الدخول.' : 'This account is blocked from access.');
+        setLoading(false);
+        return;
+      }
+
       toast.success(language === 'ar' ? 'مرحباً بعودتك!' : 'Welcome back!');
       navigate('/');
     } catch (error: any) {
@@ -56,17 +67,19 @@ export default function Login() {
         return;
       }
       
-      const path = `users/${user.uid}`;
-      let userDoc;
-      try {
-        userDoc = await getDoc(doc(db, 'users', user.uid));
-      } catch (error) {
-        handleFirestoreError(error, OperationType.GET, path);
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      
+      // Secondary check: isBlocked field in user document
+      if (userDoc.exists() && userDoc.data()?.isBlocked === true) {
+        await auth.signOut();
+        toast.error(language === 'ar' ? 'هذا الحساب محظور من الدخول.' : 'This account is blocked from access.');
+        setGoogleLoading(false);
         return;
       }
 
       if (!userDoc.exists()) {
         const role = user.email === 'mrmostafash187@gmail.com' ? 'admin' : 'applicant';
+        const path = `users/${user.uid}`;
         try {
           await setDoc(doc(db, 'users', user.uid), {
             uid: user.uid,
