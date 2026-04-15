@@ -9,6 +9,7 @@
         "name": { "type": "string" },
         "email": { "type": "string" },
         "role": { "type": "string", "enum": ["applicant", "admin"] },
+        "title": { "type": "string" },
         "isBlocked": { "type": "boolean" },
         "createdAt": { "type": "string", "format": "date-time" }
       },

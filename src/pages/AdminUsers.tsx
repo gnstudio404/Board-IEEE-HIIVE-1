@@ -12,6 +12,7 @@ interface UserProfile {
   name: string;
   email: string;
   role: 'admin' | 'user';
+  title?: string;
   photoURL?: string;
   isBlocked?: boolean;
 }
@@ -23,6 +24,7 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [confirmAction, setConfirmAction] = useState<{ type: 'role' | 'block' | 'delete', user: UserProfile } | null>(null);
+  const [editingTitle, setEditingTitle] = useState<{ uid: string, value: string } | null>(null);
 
   useEffect(() => {
     fetchUsers();
@@ -107,6 +109,17 @@ export default function AdminUsers() {
     }
   };
 
+  const handleUpdateTitle = async (uid: string, newTitle: string) => {
+    try {
+      await updateDoc(doc(db, 'users', uid), { title: newTitle });
+      toast.success(language === 'ar' ? 'تم تحديث اللقب' : 'Title updated');
+      setEditingTitle(null);
+      fetchUsers();
+    } catch (error) {
+      toast.error('Error updating title');
+    }
+  };
+
   const filteredUsers = users.filter(u => 
     u.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
     u.email?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -168,11 +181,52 @@ export default function AdminUsers() {
                             {u.name}
                             {u.isBlocked && <Ban className="w-3.5 h-3.5 text-error" />}
                           </p>
-                          {u.uid === currentUser?.uid && (
-                            <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded uppercase font-bold">
-                              {language === 'ar' ? 'أنت' : 'You'}
-                            </span>
-                          )}
+                          <div className="flex flex-col">
+                            {editingTitle?.uid === u.uid ? (
+                              <div className="flex items-center gap-2 mt-1">
+                                <input 
+                                  type="text"
+                                  className="text-xs px-2 py-1 bg-surface-container-high border border-primary/20 rounded focus:ring-1 focus:ring-primary/30 outline-none w-32"
+                                  value={editingTitle.value}
+                                  onChange={(e) => setEditingTitle({ ...editingTitle, value: e.target.value })}
+                                  autoFocus
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleUpdateTitle(u.uid, editingTitle.value);
+                                    if (e.key === 'Escape') setEditingTitle(null);
+                                  }}
+                                />
+                                <button 
+                                  onClick={() => handleUpdateTitle(u.uid, editingTitle.value)}
+                                  className="text-[10px] bg-primary text-white px-1.5 py-0.5 rounded font-bold"
+                                >
+                                  {language === 'ar' ? 'حفظ' : 'Save'}
+                                </button>
+                                <button 
+                                  onClick={() => setEditingTitle(null)}
+                                  className="text-[10px] bg-surface-container-highest text-on-surface-variant px-1.5 py-0.5 rounded font-bold"
+                                >
+                                  {language === 'ar' ? 'إلغاء' : 'Cancel'}
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2 group/title">
+                                <p className="text-xs text-on-surface-variant italic">
+                                  {u.title || (language === 'ar' ? 'لا يوجد لقب' : 'No title')}
+                                </p>
+                                <button 
+                                  onClick={() => setEditingTitle({ uid: u.uid, value: u.title || '' })}
+                                  className="opacity-0 group-hover/title:opacity-100 transition-opacity text-[10px] text-primary hover:underline"
+                                >
+                                  {language === 'ar' ? 'تعديل' : 'Edit'}
+                                </button>
+                              </div>
+                            )}
+                            {u.uid === currentUser?.uid && (
+                              <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded uppercase font-bold w-fit mt-1">
+                                {language === 'ar' ? 'أنت' : 'You'}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </td>

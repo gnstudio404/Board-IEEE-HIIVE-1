@@ -58,6 +58,7 @@ service cloud.firestore {
              data.uid is string && data.uid.size() > 0 &&
              data.email is string && isValidEmail(data.email) &&
              data.role in ['applicant', 'admin'] &&
+             (!('title' in data) || (data.title is string && data.title.size() < 100)) &&
              data.name is string && data.name.size() > 0 && data.name.size() < 100;
     }
 
