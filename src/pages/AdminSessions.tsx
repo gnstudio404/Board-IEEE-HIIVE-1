@@ -125,17 +125,29 @@ export default function AdminSessions() {
             let emailContradicts = false;
 
             if (rowEmail) {
-              if (rowEmail.includes('*')) {
-                const prefix = rowEmail.split('*')[0];
-                if (prefix.length >= 3) {
-                  if (masterEmail.startsWith(prefix)) {
-                    emailMatch = true;
-                  } else {
-                    emailContradicts = true;
-                  }
+              const rowEmailLower = rowEmail.toLowerCase().trim();
+              if (rowEmailLower.includes('*')) {
+                const [rowLocal, rowDomain] = rowEmailLower.split('@');
+                const [masterLocal, masterDomain] = masterEmail.split('@');
+                
+                const prefix = rowLocal.split('*')[0];
+                
+                // Match if:
+                // 1. Prefix matches (at least 3 chars)
+                // 2. Total length of local part matches (to handle same prefix different length)
+                // 3. Domain matches (if domain is not masked)
+                const prefixMatch = prefix.length >= 3 && masterLocal.startsWith(prefix);
+                const lengthMatch = rowLocal.length === masterLocal.length;
+                const domainMatch = !rowDomain || rowDomain.includes('*') || rowDomain === masterDomain;
+
+                if (prefixMatch && lengthMatch && domainMatch) {
+                  emailMatch = true;
+                } else if (prefix.length >= 3 && (!prefixMatch || !lengthMatch)) {
+                  // If prefix is long enough but doesn't match or length differs, it's a contradiction
+                  emailContradicts = true;
                 }
               } else {
-                if (masterEmail.includes(rowEmail) || rowEmail.includes(masterEmail)) {
+                if (masterEmail === rowEmailLower || masterEmail.includes(rowEmailLower) || rowEmailLower.includes(masterEmail)) {
                   emailMatch = true;
                 } else {
                   emailContradicts = true;
