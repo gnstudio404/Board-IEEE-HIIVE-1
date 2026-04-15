@@ -69,7 +69,7 @@ export default function Layout() {
                 referrerPolicy="no-referrer"
               />
               <div className="overflow-hidden">
-                <p className="text-sm font-bold text-primary truncate">{profile?.name || 'HIIVE Admin'}</p>
+                <p className="text-sm font-bold text-primary truncate">{profile?.name || 'Board Admin'}</p>
                 <p className="text-xs text-on-surface-variant truncate">Precision Hive Control</p>
               </div>
             </div>

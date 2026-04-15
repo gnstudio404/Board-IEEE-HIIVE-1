@@ -15,7 +15,7 @@ export const Logo: React.FC<LogoProps> = ({ className = "h-12", variant = 'defau
   return (
     <img 
       src={src} 
-      alt="HIIVE Logo" 
+      alt="IEEE HIIVE Board Logo" 
       className={`object-contain w-auto relative z-[100] ${className}`}
     />
   );

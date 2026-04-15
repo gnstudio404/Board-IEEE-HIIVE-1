@@ -283,7 +283,7 @@ export default function Login() {
             <p className="text-on-surface-variant text-sm">
               {language === 'ar' ? 'ليس لديك حساب بعد؟' : "Don't have an account yet?"} 
               <Link to="/register" className="text-tertiary font-bold hover:underline ml-1">
-                {language === 'ar' ? 'انضم إلى HIIVE' : 'Join the HIIVE'}
+                {language === 'ar' ? 'انضم إلى IEEE HIIVE Board' : 'Join the IEEE HIIVE Board'}
               </Link>
             </p>
           </div>
