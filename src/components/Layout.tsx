@@ -4,7 +4,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { auth } from '../lib/firebase';
 import { LogOut, LayoutDashboard, Users, HelpCircle, User, Menu, X, Globe, Moon, Sun } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '../lib/utils';
 import Logo from './Logo';
 
@@ -14,6 +14,21 @@ export default function Layout() {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isMenuOpen && !(event.target as Element).closest('.relative')) {
+        setIsMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isMenuOpen]);
+
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     await auth.signOut();
@@ -86,7 +101,34 @@ export default function Layout() {
         {/* TopAppBar (Admin) */}
         <header className="fixed top-0 right-0 w-full md:w-[calc(100%-16rem)] z-40 bg-surface-container-lowest/80 backdrop-blur-md border-b border-outline-variant/10 shadow-[0px_12px_32px_rgba(0,76,82,0.06)] flex justify-between items-center px-8 h-16">
           <div className="flex items-center gap-4">
-            <span className="material-symbols-outlined text-primary cursor-pointer md:hidden" onClick={() => {}}>menu</span>
+            <div className="relative">
+              <span 
+                className="material-symbols-outlined text-primary cursor-pointer hover:bg-primary/5 p-2 rounded-lg transition-colors" 
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+              >
+                menu
+              </span>
+              
+              {isMenuOpen && (
+                <div className={cn(
+                  "absolute top-full mt-2 w-56 bg-surface-container-lowest border border-outline-variant/20 rounded-2xl shadow-2xl z-50 py-3 animate-in fade-in zoom-in duration-200",
+                  isRTL ? "right-0" : "left-0"
+                )}>
+                  <div className="px-4 py-2 border-b border-outline-variant/10 mb-2 md:hidden">
+                    <p className="text-sm font-bold text-primary truncate">{profile?.name || 'Board Admin'}</p>
+                    <p className="text-[10px] text-on-surface-variant truncate uppercase tracking-wider">Precision Hive Control</p>
+                  </div>
+                  
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-error hover:bg-error-container/10 transition-all text-sm font-bold"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">logout</span>
+                    {t('nav.logout')}
+                  </button>
+                </div>
+              )}
+            </div>
             <h1 className="font-headline text-sm font-semibold uppercase tracking-widest text-primary">Precision Dashboard</h1>
           </div>
           <div className="flex items-center gap-6">
