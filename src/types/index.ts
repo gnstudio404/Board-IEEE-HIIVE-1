@@ -26,6 +26,7 @@ export interface Session {
   id: string;
   name: string;
   date: string;
+  time?: string;
   description?: string;
   createdAt: string;
 }
@@ -36,5 +37,6 @@ export interface AttendanceRecord {
   studentEmail: string;
   studentName: string;
   status: 'present' | 'absent';
+  duration?: number;
   timestamp: string;
 }

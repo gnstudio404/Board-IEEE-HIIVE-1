@@ -5,26 +5,34 @@ import { Session, MasterStudent, AttendanceRecord } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
-import { Plus, Calendar, FileSpreadsheet, Trash2, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Plus, Calendar, FileSpreadsheet, Trash2, CheckCircle, XCircle, Clock, BarChart3, Filter } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { SessionDetails } from '../components/SessionDetails';
 
 export default function AdminSessions() {
   const { t, language } = useLanguage();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [newSession, setNewSession] = useState({ name: '', date: new Date().toISOString().split('T')[0], description: '' });
+  const [newSession, setNewSession] = useState({ name: '', date: new Date().toISOString().split('T')[0], time: '18:00', description: '' });
   const [uploadingSessionId, setUploadingSessionId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [selectedSession, setSelectedSession] = useState<Session | null>(null);
+  const [dateFilter, setDateFilter] = useState<string>('');
 
   useEffect(() => {
     fetchSessions();
-  }, []);
+  }, [dateFilter]);
 
   const fetchSessions = async () => {
     setLoading(true);
     try {
-      const q = query(collection(db, 'sessions'), orderBy('date', 'desc'));
+      let q = query(collection(db, 'sessions'), orderBy('date', 'desc'));
+      
+      if (dateFilter) {
+        q = query(collection(db, 'sessions'), where('date', '>=', dateFilter), orderBy('date', 'desc'));
+      }
+
       const querySnapshot = await getDocs(q);
       const sessionData = querySnapshot.docs.map(doc => ({
         id: doc.id,
@@ -83,7 +91,7 @@ export default function AdminSessions() {
         const wb = XLSX.read(bstr, { type: 'binary' });
         const wsname = wb.SheetNames[0];
         const ws = wb.Sheets[wsname];
-        const sessionData = XLSX.utils.sheet_to_json(ws) as any[];
+        const sessionData = XLSX.utils.sheet_to_json(ws, { raw: false, defval: '' }) as any[];
 
         const masterSnapshot = await getDocs(collection(db, 'masterStudents'));
         const masterStudents = masterSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as MasterStudent[];
@@ -151,42 +159,52 @@ export default function AdminSessions() {
           });
 
           let isPresent = false;
+          let durationMinutes = 0;
           if (attendee) {
             const getVal = (obj: any, key: string) => {
               const foundKey = Object.keys(obj).find(k => k.toLowerCase() === key.toLowerCase());
               return foundKey ? String(obj[foundKey]) : '';
             };
             const durationStr = getVal(attendee, 'duration');
-            let durationMinutes = parseDuration(durationStr);
+            const timeJoined = getVal(attendee, 'time joined');
+            const timeExited = getVal(attendee, 'time exited');
             
-            // Fallback: Calculate from Time joined and Time exited if duration is low
-            if (durationMinutes < 10) {
-              const timeJoined = getVal(attendee, 'time joined');
-              const timeExited = getVal(attendee, 'time exited');
+            const parseTime = (t: string) => {
+              if (!t) return null;
+              // Handle Excel numeric time (fraction of a day) if it somehow gets through as a string
+              if (!isNaN(Number(t)) && Number(t) < 1) {
+                return Math.round(Number(t) * 1440);
+              }
+
+              // Match HH:MM AM/PM or HH:MM:SS AM/PM or HH:MM
+              const match = t.match(/(\d+):(\d+)(?::\d+)?\s*(AM|PM)?/i);
+              if (!match) return null;
               
-              if (timeJoined && timeExited) {
-                const parseTime = (t: string) => {
-                  const match = t.match(/(\d+):(\d+)\s*(AM|PM)/i);
-                  if (!match) return null;
-                  let hours = parseInt(match[1]);
-                  const minutes = parseInt(match[2]);
-                  const ampm = match[3].toUpperCase();
-                  if (ampm === 'PM' && hours < 12) hours += 12;
-                  if (ampm === 'AM' && hours === 12) hours = 0;
-                  return hours * 60 + minutes;
-                };
-                
-                const joinedMins = parseTime(timeJoined);
-                const exitedMins = parseTime(timeExited);
-                
-                if (joinedMins !== null && exitedMins !== null) {
-                  const diff = exitedMins - joinedMins;
-                  if (diff > 0) durationMinutes = Math.max(durationMinutes, diff);
-                }
+              let hours = parseInt(match[1]);
+              const minutes = parseInt(match[2]);
+              const ampm = match[3]?.toUpperCase();
+              
+              if (ampm === 'PM' && hours < 12) hours += 12;
+              if (ampm === 'AM' && hours === 12) hours = 0;
+              
+              return hours * 60 + minutes;
+            };
+
+            let calculatedDiff = 0;
+            if (timeJoined && timeExited) {
+              const joinedMins = parseTime(timeJoined);
+              const exitedMins = parseTime(timeExited);
+              if (joinedMins !== null && exitedMins !== null) {
+                calculatedDiff = exitedMins - joinedMins;
+                if (calculatedDiff < 0) calculatedDiff += 1440; // Handle overnight
               }
             }
+
+            const sheetDuration = parseDuration(durationStr);
+            // Prioritize calculated difference from the last two columns
+            durationMinutes = calculatedDiff > 0 ? calculatedDiff : sheetDuration;
             
-            // Requirement: Must be more than 10 minutes
+            // Requirement: Must be more than 10 minutes for "Present" status
             if (durationMinutes >= 10) {
               isPresent = true;
             }
@@ -198,6 +216,7 @@ export default function AdminSessions() {
             studentEmail: master.email,
             studentName: master.name,
             status: isPresent ? 'present' : 'absent',
+            duration: durationMinutes,
             timestamp: new Date().toISOString()
           });
 
@@ -247,21 +266,45 @@ export default function AdminSessions() {
     }
   };
 
+  if (selectedSession) {
+    return <SessionDetails session={selectedSession} onBack={() => setSelectedSession(null)} />;
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="font-headline text-3xl font-bold text-primary">{t('admin.sessions')}</h1>
           <p className="text-on-surface-variant">{language === 'ar' ? 'إدارة جلسات الحضور ورفع الشيتات' : 'Manage attendance sessions and upload sheets'}</p>
         </div>
         
-        <button 
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-full hover:bg-primary-container transition-all shadow-lg shadow-primary/20 font-bold"
-        >
-          <Plus className="w-5 h-5" />
-          <span>{t('admin.addSession')}</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <div className="relative flex items-center">
+            <Filter className="absolute left-3 w-4 h-4 text-on-surface-variant/50" />
+            <input 
+              type="date" 
+              className="pl-9 pr-4 py-2 bg-surface-container-lowest border border-outline-variant/10 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 transition-all"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              placeholder={t('admin.filterByDate')}
+            />
+            {dateFilter && (
+              <button 
+                onClick={() => setDateFilter('')}
+                className="ml-2 text-xs text-primary font-bold hover:underline"
+              >
+                {t('admin.clear')}
+              </button>
+            )}
+          </div>
+          <button 
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-full hover:bg-primary-container transition-all shadow-lg shadow-primary/20 font-bold"
+          >
+            <Plus className="w-5 h-5" />
+            <span>{t('admin.addSession')}</span>
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -319,10 +362,17 @@ export default function AdminSessions() {
                 <p className="text-sm text-on-surface-variant/70 mb-6 line-clamp-2">{session.description}</p>
               )}
 
-              <div className="pt-6 border-t border-outline-variant/10">
-                <label className="w-full flex items-center justify-center gap-2 py-3 bg-surface-container-low text-primary rounded-xl cursor-pointer hover:bg-primary/5 transition-colors font-bold text-sm border border-primary/10">
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                <button 
+                  onClick={() => setSelectedSession(session)}
+                  className="flex items-center justify-center gap-2 py-3 bg-primary/10 text-primary rounded-xl hover:bg-primary/20 transition-colors font-bold text-sm"
+                >
+                  <BarChart3 className="w-4 h-4" />
+                  <span>{t('admin.details')}</span>
+                </button>
+                <label className="flex items-center justify-center gap-2 py-3 bg-surface-container-low text-on-surface-variant rounded-xl cursor-pointer hover:bg-surface-container-high transition-colors font-bold text-sm border border-outline-variant/10">
                   <FileSpreadsheet className="w-4 h-4" />
-                  <span>{uploadingSessionId === session.id ? (language === 'ar' ? 'جاري المعالجة...' : 'Processing...') : t('admin.uploadSession')}</span>
+                  <span>{uploadingSessionId === session.id ? (language === 'ar' ? '...' : '...') : t('admin.uploadSession')}</span>
                   <input 
                     type="file" 
                     accept=".csv,.xlsx,.xls" 
@@ -366,15 +416,27 @@ export default function AdminSessions() {
                     onChange={(e) => setNewSession({ ...newSession, name: e.target.value })}
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-bold text-on-surface-variant ml-1">{t('admin.sessionDate')}</label>
-                  <input 
-                    required
-                    type="date" 
-                    className="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-primary/20 transition-all"
-                    value={newSession.date}
-                    onChange={(e) => setNewSession({ ...newSession, date: e.target.value })}
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-bold text-on-surface-variant ml-1">{t('admin.sessionDate')}</label>
+                    <input 
+                      required
+                      type="date" 
+                      className="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-primary/20 transition-all"
+                      value={newSession.date}
+                      onChange={(e) => setNewSession({ ...newSession, date: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-bold text-on-surface-variant ml-1">{t('admin.sessionTime')}</label>
+                    <input 
+                      required
+                      type="time" 
+                      className="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-primary/20 transition-all"
+                      value={newSession.time}
+                      onChange={(e) => setNewSession({ ...newSession, time: e.target.value })}
+                    />
+                  </div>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-sm font-bold text-on-surface-variant ml-1">{language === 'ar' ? 'الوصف' : 'Description'}</label>
