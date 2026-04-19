@@ -12,7 +12,7 @@ interface UserProfile {
   uid: string;
   name: string;
   email: string;
-  role: 'admin' | 'user' | 'organizer';
+  role: 'admin' | 'applicant' | 'organizer';
   title?: string;
   photoURL?: string;
   isBlocked?: boolean;
@@ -49,13 +49,13 @@ export default function AdminUsers() {
   };
 
   const handleToggleRole = async (targetUser: UserProfile) => {
-    let newRole: 'admin' | 'user' | 'organizer' = 'user';
+    let newRole: 'admin' | 'applicant' | 'organizer' = 'applicant';
     
-    if (targetUser.role === 'user') {
+    if (targetUser.role === 'applicant') {
       newRole = 'admin';
     } else if (targetUser.role === 'admin') {
       // Only owner (isSuperAdmin) can promote to organizer
-      newRole = isSuperAdmin ? 'organizer' : 'user';
+      newRole = isSuperAdmin ? 'organizer' : 'applicant';
     } else if (targetUser.role === 'organizer') {
       // Only owner can demote organizer
       newRole = 'admin';
@@ -260,7 +260,7 @@ export default function AdminUsers() {
                             : 'bg-surface-container-high text-on-surface-variant border border-outline-variant/20'
                       }`}>
                         {u.role === 'organizer' ? <Shield className="w-3.5 h-3.5" /> : u.role === 'admin' ? <ShieldCheck className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
-                        {u.role === 'organizer' ? (language === 'ar' ? 'منظم' : 'Organizer') : u.role === 'admin' ? (language === 'ar' ? 'مسؤول' : 'Admin') : (language === 'ar' ? 'مستخدم' : 'User')}
+                        {u.role === 'organizer' ? (language === 'ar' ? 'منظم' : 'Organizer') : u.role === 'admin' ? (language === 'ar' ? 'مسؤول' : 'Admin') : (language === 'ar' ? 'متقدم' : 'Applicant')}
                       </span>
                     </td>
                     <td className="py-4 px-2 text-right">
@@ -269,10 +269,12 @@ export default function AdminUsers() {
                           {(isSuperAdmin || (u.role !== 'admin' && u.role !== 'organizer')) && (
                             <button
                               onClick={() => setConfirmAction({ type: 'role', user: u })}
-                              className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-all"
-                              title={u.role === 'organizer' ? (language === 'ar' ? 'تخفيض لـ مسؤول' : 'Demote to Admin') : u.role === 'admin' ? (isSuperAdmin ? (language === 'ar' ? 'ترقية لـ منظم' : 'Promote to Organizer') : t('admin.demote')) : t('admin.promote')}
+                              className={`p-2 rounded-lg transition-all ${
+                                u.role === 'admin' && isSuperAdmin ? 'text-amber-500 hover:bg-amber-50' : 'text-primary hover:bg-primary/10'
+                              }`}
+                              title={u.role === 'organizer' ? (language === 'ar' ? 'تخفيض لـ مسؤول' : 'Demote to Admin') : u.role === 'admin' ? (isSuperAdmin ? (language === 'ar' ? 'ترقية لـ منظم' : 'Promote to Organizer') : (language === 'ar' ? 'تخفيض لـ متقدم' : 'Demote to Applicant')) : (language === 'ar' ? 'ترقية لـ مسؤول' : 'Promote to Admin')}
                             >
-                              <UserCog className="w-5 h-5" />
+                              {u.role === 'admin' && isSuperAdmin ? <ShieldCheck className="w-5 h-5" /> : <UserCog className="w-5 h-5" />}
                             </button>
                           )}
                           
