@@ -5,9 +5,12 @@ import { AttendanceRecord, Session } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
-import { Search, Filter, Download, Users, CheckCircle, XCircle, BarChart3, PieChart as PieChartIcon, Trash2, ChevronDown, ExternalLink } from 'lucide-react';
+import { Search, Filter, Download, Users, CheckCircle, XCircle, BarChart3, PieChart as PieChartIcon, Trash2, ChevronDown, ExternalLink, FileText, TrendingUp, TrendingDown, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 export default function AdminAttendance() {
   const { t, language } = useLanguage();
@@ -96,6 +99,100 @@ export default function AdminAttendance() {
     { name: language === 'ar' ? 'حاضر' : 'Present', value: overallStats.present, color: '#10b981' },
     { name: language === 'ar' ? 'غائب' : 'Absent', value: overallStats.absent, color: '#ef4444' }
   ];
+
+  // Export Functions
+  const exportAttendancePDF = () => {
+    const doc = new jsPDF();
+    const title = language === 'ar' ? 'تقرير الحضور والغياب' : 'Attendance Report';
+    
+    doc.setFontSize(20);
+    doc.text(title, 14, 22);
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+
+    const tableData = filteredRecords.map(r => [
+      r.studentName,
+      r.studentEmail,
+      r.status === 'present' ? (language === 'ar' ? 'حاضر' : 'Present') : (language === 'ar' ? 'غائب' : 'Absent'),
+      sessions.find(s => s.id === r.sessionId)?.name || 'Unknown'
+    ]);
+
+    autoTable(doc, {
+      startY: 40,
+      head: [[
+        language === 'ar' ? 'الاسم' : 'Name',
+        language === 'ar' ? 'البريد' : 'Email',
+        language === 'ar' ? 'الحالة' : 'Status',
+        language === 'ar' ? 'الجلسة' : 'Session'
+      ]],
+      body: tableData,
+      theme: 'grid',
+      headStyles: { fillColor: '#3b82f6' }
+    });
+
+    doc.save(`attendance-report-${new Date().toISOString().split('T')[0]}.pdf`);
+    toast.success(language === 'ar' ? 'تم تحميل التقرير بنجاح' : 'Report downloaded successfully');
+  };
+
+  const exportAttendanceExcel = () => {
+    const data = memberStats.map(m => ({
+      [language === 'ar' ? 'الاسم' : 'Name']: m.name,
+      [language === 'ar' ? 'البريد الإلكتروني' : 'Email']: m.email,
+      [language === 'ar' ? 'نسبة الحضور' : 'Attendance Rate']: `${m.rate.toFixed(1)}%`,
+      [language === 'ar' ? 'نسبة الغياب' : 'Absence Rate']: `${(100 - m.rate).toFixed(1)}%`,
+      [language === 'ar' ? 'عدد الجلسات التي حضرها' : 'Sessions Attended']: m.present,
+      [language === 'ar' ? 'إجمالي الجلسات' : 'Total Sessions']: m.total
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, language === 'ar' ? 'الحضور' : 'Attendance');
+    XLSX.writeFile(wb, `attendance-report-${new Date().toISOString().split('T')[0]}.xlsx`);
+    toast.success(language === 'ar' ? 'تم تصدير ملف الإكسيل بنجاح' : 'Excel file exported successfully');
+  };
+
+  const getMemberStats = () => {
+    const memberMap = new Map<string, { name: string, email: string, present: number, total: number }>();
+    
+    records.forEach(r => {
+      const stats = memberMap.get(r.studentEmail) || { name: r.studentName, email: r.studentEmail, present: 0, total: 0 };
+      stats.total++;
+      if (r.status === 'present') stats.present++;
+      memberMap.set(r.studentEmail, stats);
+    });
+
+    return Array.from(memberMap.values())
+      .map(m => ({ ...m, rate: (m.present / m.total) * 100 }))
+      .sort((a, b) => b.rate - a.rate);
+  };
+
+  const getMonthlyStats = () => {
+    const monthMap = new Map<string, { name: string, present: number, total: number }>();
+    
+    records.forEach(r => {
+      const date = new Date(r.timestamp);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const monthName = date.toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US', { month: 'short', year: 'numeric' });
+      
+      const stats = monthMap.get(monthKey) || { name: monthName, present: 0, total: 0 };
+      stats.total++;
+      if (r.status === 'present') stats.present++;
+      monthMap.set(monthKey, stats);
+    });
+
+    return Array.from(monthMap.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([_, stats]) => ({
+        name: stats.name,
+        rate: (stats.present / stats.total) * 100
+      }));
+  };
+
+  const memberStats = getMemberStats();
+  const monthlyStats = getMonthlyStats();
+  const topMembers = memberStats.slice(0, 5);
+  const weakMembers = [...memberStats].reverse().slice(0, 5);
 
   return (
     <div className="space-y-8">
@@ -222,6 +319,104 @@ export default function AdminAttendance() {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* Export & Analytics Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Export Options */}
+        <div className="bg-surface-container-lowest rounded-3xl p-8 border border-outline-variant/10 shadow-sm">
+          <h3 className="font-headline font-bold text-xl mb-6 flex items-center gap-2">
+            <Download className="w-5 h-5 text-primary" />
+            {language === 'ar' ? 'تصدير التقارير' : 'Export Reports'}
+          </h3>
+          <div className="space-y-3">
+            <button 
+              onClick={exportAttendancePDF}
+              className="w-full flex items-center justify-between p-4 bg-surface-container-low hover:bg-primary/5 rounded-2xl transition-all group border border-outline-variant/5"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-rose-500/10 rounded-xl text-rose-500 group-hover:bg-rose-500 group-hover:text-white transition-colors">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <span className="font-bold text-sm">{language === 'ar' ? 'تقرير الحضور (PDF)' : 'Attendance Report (PDF)'}</span>
+              </div>
+              <Download className="w-4 h-4 text-on-surface-variant group-hover:text-primary transition-colors" />
+            </button>
+
+            <button 
+              onClick={exportAttendanceExcel}
+              className="w-full flex items-center justify-between p-4 bg-surface-container-low hover:bg-primary/5 rounded-2xl transition-all group border border-outline-variant/5"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                  <TrendingUp className="w-5 h-5" />
+                </div>
+                <span className="font-bold text-sm">{language === 'ar' ? 'أداء الأعضاء (Excel)' : 'Member Performance (Excel)'}</span>
+              </div>
+              <Download className="w-4 h-4 text-on-surface-variant group-hover:text-primary transition-colors" />
+            </button>
+          </div>
+        </div>
+
+        {/* Top Members */}
+        <div className="bg-surface-container-lowest rounded-3xl p-8 border border-outline-variant/10 shadow-sm">
+          <h3 className="font-headline font-bold text-xl mb-6 flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-emerald-500" />
+            {language === 'ar' ? 'الأعضاء الأكثر التزاماً' : 'Top Members'}
+          </h3>
+          <div className="space-y-4">
+            {topMembers.map((m, i) => (
+              <div key={m.name} className="flex items-center justify-between p-3 bg-emerald-500/5 rounded-2xl border border-emerald-500/10">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-black text-emerald-500 w-4">#{i+1}</span>
+                  <p className="font-bold text-sm truncate w-32">{m.name}</p>
+                </div>
+                <span className="text-xs font-black bg-emerald-500 text-white px-2 py-1 rounded-lg">{m.rate.toFixed(0)}%</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Weak Members */}
+        <div className="bg-surface-container-lowest rounded-3xl p-8 border border-outline-variant/10 shadow-sm">
+          <h3 className="font-headline font-bold text-xl mb-6 flex items-center gap-2">
+            <TrendingDown className="w-5 h-5 text-rose-500" />
+            {language === 'ar' ? 'الأعضاء الأقل التزاماً' : 'Weak Members'}
+          </h3>
+          <div className="space-y-4">
+            {weakMembers.map((m, i) => (
+              <div key={m.name} className="flex items-center justify-between p-3 bg-rose-500/5 rounded-2xl border border-rose-500/10">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-black text-rose-500 w-4">#{i+1}</span>
+                  <p className="font-bold text-sm truncate w-32">{m.name}</p>
+                </div>
+                <span className="text-xs font-black bg-rose-500 text-white px-2 py-1 rounded-lg">{m.rate.toFixed(0)}%</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Monthly Performance Chart */}
+      <div className="bg-surface-container-lowest rounded-[2.5rem] p-8 border border-outline-variant/10 shadow-sm">
+        <h3 className="font-headline font-bold text-xl mb-8 flex items-center gap-2">
+          <Calendar className="w-5 h-5 text-primary" />
+          {language === 'ar' ? 'الأداء الشهري العام' : 'Overall Monthly Performance'}
+        </h3>
+        <div className="h-[300px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={monthlyStats}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} unit="%" />
+              <Tooltip 
+                cursor={{ fill: '#f1f5f9' }}
+                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+              />
+              <Bar dataKey="rate" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={60} />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
 

@@ -185,13 +185,6 @@ export default function AdminUsers() {
                                 {u.name}
                               </p>
                               {u.isBlocked && <Ban className="w-3.5 h-3.5 text-error" />}
-                              <button 
-                                onClick={() => navigate(`/member/${u.uid}`)}
-                                className="p-1 text-primary hover:bg-primary/10 rounded-full transition-all"
-                                title={language === 'ar' ? 'عرض الملف الذكي' : 'View Smart Profile'}
-                              >
-                                <ExternalLink className="w-3.5 h-3.5" />
-                              </button>
                             </div>
                             {editingTitle?.uid === u.uid ? (
                               <div className="flex items-center gap-2 mt-1">
