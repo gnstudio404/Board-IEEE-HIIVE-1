@@ -12,7 +12,7 @@ interface UserProfile {
   uid: string;
   name: string;
   email: string;
-  role: 'admin' | 'user';
+  role: 'admin' | 'user' | 'organizer';
   title?: string;
   photoURL?: string;
   isBlocked?: boolean;
@@ -49,8 +49,24 @@ export default function AdminUsers() {
   };
 
   const handleToggleRole = async (targetUser: UserProfile) => {
-    const newRole = targetUser.role === 'admin' ? 'user' : 'admin';
+    let newRole: 'admin' | 'user' | 'organizer' = 'user';
+    
+    if (targetUser.role === 'user') {
+      newRole = 'admin';
+    } else if (targetUser.role === 'admin') {
+      // Only owner (isSuperAdmin) can promote to organizer
+      newRole = isSuperAdmin ? 'organizer' : 'user';
+    } else if (targetUser.role === 'organizer') {
+      // Only owner can demote organizer
+      newRole = 'admin';
+    }
+
     try {
+      if (targetUser.role === 'organizer' && !isSuperAdmin) {
+        toast.error(language === 'ar' ? 'فقط المؤسس يمكنه تعديل هذه الرتبة' : 'Only owner can modify this rank');
+        return;
+      }
+      
       await updateDoc(doc(db, 'users', targetUser.uid), { role: newRole });
       toast.success(language === 'ar' ? 'تم تحديث الصلاحيات' : 'Role updated');
       fetchUsers();
@@ -237,22 +253,24 @@ export default function AdminUsers() {
                     <td className="py-4 px-2 text-on-surface-variant text-sm">{u.email}</td>
                     <td className="py-4 px-2">
                       <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                        u.role === 'admin' 
-                          ? 'bg-primary/10 text-primary border border-primary/20' 
-                          : 'bg-surface-container-high text-on-surface-variant border border-outline-variant/20'
+                        u.role === 'organizer'
+                          ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
+                          : u.role === 'admin' 
+                            ? 'bg-primary/10 text-primary border border-primary/20' 
+                            : 'bg-surface-container-high text-on-surface-variant border border-outline-variant/20'
                       }`}>
-                        {u.role === 'admin' ? <ShieldCheck className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
-                        {u.role === 'admin' ? (language === 'ar' ? 'مسؤول' : 'Admin') : (language === 'ar' ? 'مستخدم' : 'User')}
+                        {u.role === 'organizer' ? <Shield className="w-3.5 h-3.5" /> : u.role === 'admin' ? <ShieldCheck className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
+                        {u.role === 'organizer' ? (language === 'ar' ? 'منظم' : 'Organizer') : u.role === 'admin' ? (language === 'ar' ? 'مسؤول' : 'Admin') : (language === 'ar' ? 'مستخدم' : 'User')}
                       </span>
                     </td>
                     <td className="py-4 px-2 text-right">
                       {u.uid !== currentUser?.uid && u.email !== 'omarwork1011@gmail.com' && (
                         <div className="flex items-center justify-end gap-2">
-                          {(isSuperAdmin || u.role !== 'admin') && (
+                          {(isSuperAdmin || (u.role !== 'admin' && u.role !== 'organizer')) && (
                             <button
                               onClick={() => setConfirmAction({ type: 'role', user: u })}
                               className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-all"
-                              title={u.role === 'admin' ? t('admin.demote') : t('admin.promote')}
+                              title={u.role === 'organizer' ? (language === 'ar' ? 'تخفيض لـ مسؤول' : 'Demote to Admin') : u.role === 'admin' ? (isSuperAdmin ? (language === 'ar' ? 'ترقية لـ منظم' : 'Promote to Organizer') : t('admin.demote')) : t('admin.promote')}
                             >
                               <UserCog className="w-5 h-5" />
                             </button>
@@ -266,7 +284,7 @@ export default function AdminUsers() {
                             {u.isBlocked ? <Unlock className="w-5 h-5" /> : <Ban className="w-5 h-5" />}
                           </button>
 
-                          {(isSuperAdmin || u.role !== 'admin') && (
+                          {(isSuperAdmin || (u.role !== 'admin' && u.role !== 'organizer')) && (
                             <button
                               onClick={() => setConfirmAction({ type: 'delete', user: u })}
                               className="p-2 text-error hover:bg-error/10 rounded-lg transition-all"
@@ -314,7 +332,9 @@ export default function AdminUsers() {
               <h3 className="text-xl font-bold text-on-surface mb-2">
                 {confirmAction.type === 'delete' ? t('admin.deleteUser') : 
                  confirmAction.type === 'block' ? (confirmAction.user.isBlocked ? t('admin.unblock') : t('admin.block')) : 
-                 (confirmAction.user.role === 'admin' ? t('admin.demote') : t('admin.promote'))}
+                 (confirmAction.user.role === 'organizer' ? (language === 'ar' ? 'تخفيض الرتبة لـ مسؤول' : 'Demote to Admin') : 
+                  confirmAction.user.role === 'admin' ? (isSuperAdmin ? (language === 'ar' ? 'ترقية الرتبة لـ منظم' : 'Promote to Organizer') : t('admin.demote')) : 
+                  t('admin.promote'))}
               </h3>
               
               <p className="text-on-surface-variant mb-8">

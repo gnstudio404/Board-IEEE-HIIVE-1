@@ -110,9 +110,12 @@ export default function Login() {
     } catch (error: any) {
       console.error("Google Sign-In Error:", error);
       if (error.code === 'auth/popup-closed-by-user') {
-        toast.error(language === 'ar' ? 'تم إغلاق نافذة تسجيل الدخول. يرجى التأكد من عدم إغلاق النافذة المنبثقة والسماح بالـ Pop-ups في متصفحك.' : 'Sign-in popup was closed. Please make sure to complete the process and allow pop-ups in your browser.');
+        // Just log it or show a mild message instead of a scary error
+        toast.warning(language === 'ar' ? 'تم إغلاق نافذة تسجيل الدخول.' : 'Sign-in popup was closed.');
       } else if (error.code === 'auth/cancelled-by-user') {
-        toast.error(language === 'ar' ? 'تم إلغاء عملية تسجيل الدخول.' : 'Sign-in was cancelled.');
+        toast.info(language === 'ar' ? 'تم إلغاء عملية تسجيل الدخول.' : 'Sign-in was cancelled.');
+      } else if (error.code === 'auth/popup-blocked') {
+        toast.error(language === 'ar' ? 'تم حظر النافذة المنبثقة. يرجى السماح بالـ Pop-ups في متصفحك.' : 'Popup was blocked. Please allow popups for this site.');
       } else {
         toast.error(error.message || 'Failed to sign in with Google');
       }

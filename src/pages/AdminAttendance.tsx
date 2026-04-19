@@ -103,7 +103,7 @@ export default function AdminAttendance() {
   // Export Functions
   const exportAttendancePDF = () => {
     const doc = new jsPDF();
-    const title = language === 'ar' ? 'تقرير الحضور والغياب' : 'Attendance Report';
+    const title = 'Attendance Report'; // Always English
     
     doc.setFontSize(20);
     doc.text(title, 14, 22);
@@ -114,18 +114,13 @@ export default function AdminAttendance() {
     const tableData = filteredRecords.map(r => [
       r.studentName,
       r.studentEmail,
-      r.status === 'present' ? (language === 'ar' ? 'حاضر' : 'Present') : (language === 'ar' ? 'غائب' : 'Absent'),
+      r.status === 'present' ? 'Present' : 'Absent',
       sessions.find(s => s.id === r.sessionId)?.name || 'Unknown'
     ]);
 
     autoTable(doc, {
       startY: 40,
-      head: [[
-        language === 'ar' ? 'الاسم' : 'Name',
-        language === 'ar' ? 'البريد' : 'Email',
-        language === 'ar' ? 'الحالة' : 'Status',
-        language === 'ar' ? 'الجلسة' : 'Session'
-      ]],
+      head: [['Name', 'Email', 'Status', 'Session']], // Always English
       body: tableData,
       theme: 'grid',
       headStyles: { fillColor: '#3b82f6' }
@@ -137,17 +132,15 @@ export default function AdminAttendance() {
 
   const exportAttendanceExcel = () => {
     const data = memberStats.map(m => ({
-      [language === 'ar' ? 'الاسم' : 'Name']: m.name,
-      [language === 'ar' ? 'البريد الإلكتروني' : 'Email']: m.email,
-      [language === 'ar' ? 'نسبة الحضور' : 'Attendance Rate']: `${m.rate.toFixed(1)}%`,
-      [language === 'ar' ? 'نسبة الغياب' : 'Absence Rate']: `${(100 - m.rate).toFixed(1)}%`,
-      [language === 'ar' ? 'عدد الجلسات التي حضرها' : 'Sessions Attended']: m.present,
-      [language === 'ar' ? 'إجمالي الجلسات' : 'Total Sessions']: m.total
+      'Name': m.name,
+      'Email': m.email,
+      'Sessions Attended': m.present,
+      'Sessions Missed': m.total - m.present
     }));
 
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, language === 'ar' ? 'الحضور' : 'Attendance');
+    XLSX.utils.book_append_sheet(wb, ws, 'Attendance'); // Always English
     XLSX.writeFile(wb, `attendance-report-${new Date().toISOString().split('T')[0]}.xlsx`);
     toast.success(language === 'ar' ? 'تم تصدير ملف الإكسيل بنجاح' : 'Excel file exported successfully');
   };

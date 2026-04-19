@@ -120,7 +120,16 @@ export default function Register() {
       toast.success(language === 'ar' ? 'تم تسجيل الدخول بواسطة جوجل!' : 'Signed in with Google!');
       navigate('/');
     } catch (error: any) {
-      toast.error(error.message || 'Failed to sign in with Google');
+      console.error("Google Sign-In Error:", error);
+      if (error.code === 'auth/popup-closed-by-user') {
+        toast.warning(language === 'ar' ? 'تم إغلاق نافذة تسجيل الدخول.' : 'Sign-in popup was closed.');
+      } else if (error.code === 'auth/cancelled-by-user') {
+        toast.info(language === 'ar' ? 'تم إلغاء عملية تسجيل الدخول.' : 'Sign-in was cancelled.');
+      } else if (error.code === 'auth/popup-blocked') {
+        toast.error(language === 'ar' ? 'تم حظر النافذة المنبثقة. يرجى السماح بالـ Pop-ups في متصفحك.' : 'Popup was blocked. Please allow popups for this site.');
+      } else {
+        toast.error(error.message || 'Failed to sign in with Google');
+      }
     }
   };
 

@@ -37,12 +37,15 @@ service cloud.firestore {
     function isAdmin() {
       return isAuthenticated() && (
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'organizer' ||
         (request.auth.token.email == "omarwork1011@gmail.com" && request.auth.token.email_verified == true)
       );
     }
 
     function isSuperAdmin() {
-      return isAuthenticated() && request.auth.token.email == "omarwork1011@gmail.com";
+      return isAuthenticated() && (
+        request.auth.token.email == "omarwork1011@gmail.com"
+      );
     }
 
     function hasRequiredFields(fields) {
@@ -61,7 +64,7 @@ service cloud.firestore {
       return hasRequiredFields(['uid', 'name', 'email', 'role']) &&
              data.uid is string && data.uid.size() > 0 &&
              data.email is string && isValidEmail(data.email) &&
-             data.role in ['applicant', 'admin'] &&
+             data.role in ['applicant', 'admin', 'organizer', 'user'] &&
              (!('title' in data) || (data.title is string && data.title.size() < 100)) &&
              (!('skills' in data) || (data.skills is list && data.skills.size() <= 20)) &&
              (!('badges' in data) || (data.badges is list && data.badges.size() <= 10)) &&
@@ -93,13 +96,14 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if isAuthenticated() && (isOwner(userId) || isAdmin());
-      allow create: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data) && (request.resource.data.role == 'applicant' || isAdmin());
+      allow create: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data) && (request.resource.data.role == 'applicant' || request.resource.data.role == 'user' || isAdmin());
       allow update: if isAuthenticated() && (
         (isOwner(userId) && isValidUser(request.resource.data) && request.resource.data.role == resource.data.role) || 
         (isSuperAdmin()) ||
-        (isAdmin() && resource.data.role != 'admin' && request.resource.data.role != 'admin')
+        (isAdmin() && resource.data.role == 'user' && request.resource.data.role == 'admin') ||
+        (isAdmin() && resource.data.role == 'admin' && request.resource.data.role == 'user')
       );
-      allow delete: if isSuperAdmin() || (isAdmin() && resource.data.role != 'admin');
+      allow delete: if isSuperAdmin() || (isAdmin() && resource.data.role == 'user');
     }
 
     match /masterStudents/{studentId} {

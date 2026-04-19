@@ -9,6 +9,7 @@ interface AuthContextType {
   profile: UserProfile | null;
   loading: boolean;
   isAdmin: boolean;
+  isOrganizer: boolean;
   isSuperAdmin: boolean;
 }
 
@@ -17,6 +18,7 @@ const AuthContext = createContext<AuthContextType>({
   profile: null,
   loading: true,
   isAdmin: false,
+  isOrganizer: false,
   isSuperAdmin: false,
 });
 
@@ -56,11 +58,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => unsubscribeProfile();
   }, [user]);
 
-  const isAdmin = profile?.role === 'admin';
+  const isAdmin = profile?.role === 'admin' || profile?.role === 'organizer';
+  const isOrganizer = profile?.role === 'organizer';
   const isSuperAdmin = user?.email === 'omarwork1011@gmail.com';
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, isAdmin, isSuperAdmin }}>
+    <AuthContext.Provider value={{ user, profile, loading, isAdmin, isOrganizer, isSuperAdmin }}>
       {children}
     </AuthContext.Provider>
   );
