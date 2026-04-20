@@ -17,6 +17,7 @@ export const downloadChartAsPng = async (element: HTMLElement | string, filename
   try {
     const dataUrl = await toPng(target, {
       cacheBust: true,
+      pixelRatio: 3, // Increase for high definition (retina quality)
       filter: (node: any) => {
         // Hide elements that shouldn't be in the export
         if (node.classList && (node.classList.contains('download-button-hide') || node.tagName === 'BUTTON')) {
