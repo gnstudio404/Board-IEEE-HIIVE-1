@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { auth } from '../lib/firebase';
-import { LogOut, LayoutDashboard, Users, HelpCircle, User, Menu, X, Globe, Moon, Sun } from 'lucide-react';
+import { LogOut, LayoutDashboard, Users, User, Menu, X, Globe, Moon, Sun, Home, Calendar, CheckCircle, Shield, Bell, Settings } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '../lib/utils';
 import Logo from './Logo';
@@ -37,15 +37,15 @@ export default function Layout() {
 
   const navItems = isAdmin 
     ? [
-        { name: t('nav.dashboard'), path: '/admin', icon: 'dashboard' },
-        { name: t('nav.students'), path: '/admin/students', icon: 'group' },
-        { name: t('nav.sessions'), path: '/admin/sessions', icon: 'event' },
-        { name: t('nav.attendance'), path: '/admin/attendance', icon: 'fact_check' },
-        { name: t('nav.users'), path: '/admin/users', icon: 'shield_person' },
+        { name: t('nav.dashboard'), path: '/admin', icon: LayoutDashboard },
+        { name: t('nav.students'), path: '/admin/students', icon: Users },
+        { name: t('nav.sessions'), path: '/admin/sessions', icon: Calendar },
+        { name: t('nav.attendance'), path: '/admin/attendance', icon: CheckCircle },
+        { name: t('nav.users'), path: '/admin/users', icon: Shield },
       ]
     : [
-        { name: t('nav.home'), path: '/', icon: 'home' },
-        { name: t('nav.profile'), path: '/profile', icon: 'account_circle' },
+        { name: t('nav.home'), path: '/', icon: Home },
+        { name: t('nav.profile'), path: '/profile', icon: User },
       ];
 
   if (isAdmin) {
@@ -68,9 +68,7 @@ export default function Layout() {
                     : "text-on-surface-variant hover:text-primary hover:bg-surface-container-low"
                 )}
               >
-                <span className={cn("material-symbols-outlined", location.pathname === item.path && "fill-1")}>
-                  {item.icon}
-                </span>
+                <item.icon className={cn("w-5 h-5", location.pathname === item.path && "text-primary")} />
                 <span>{item.name}</span>
               </Link>
             ))}
@@ -92,7 +90,7 @@ export default function Layout() {
               onClick={handleLogout}
               className="mt-4 w-full flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:text-error hover:bg-error-container/10 rounded-lg transition-all text-sm font-medium"
             >
-              <span className="material-symbols-outlined text-[20px]">logout</span>
+              <LogOut className="w-5 h-5" />
               {t('nav.logout')}
             </button>
           </div>
@@ -102,12 +100,12 @@ export default function Layout() {
         <header className="fixed top-0 right-0 w-full md:w-[calc(100%-16rem)] z-40 bg-surface-container-lowest/80 backdrop-blur-md border-b border-outline-variant/10 shadow-[0px_12px_32px_rgba(0,76,82,0.06)] flex justify-between items-center px-8 h-16">
           <div className="flex items-center gap-4">
             <div className="relative">
-              <span 
-                className="material-symbols-outlined text-primary cursor-pointer hover:bg-primary/5 p-2 rounded-lg transition-colors" 
+              <button 
+                className="text-primary hover:bg-primary/5 p-2 rounded-lg transition-colors" 
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
               >
-                menu
-              </span>
+                <Menu className="w-5 h-5" />
+              </button>
               
               {isMenuOpen && (
                 <div className={cn(
@@ -123,7 +121,7 @@ export default function Layout() {
                     onClick={handleLogout}
                     className="w-full flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-error hover:bg-error-container/10 transition-all text-sm font-bold"
                   >
-                    <span className="material-symbols-outlined text-[20px]">logout</span>
+                    <LogOut className="w-5 h-5" />
                     {t('nav.logout')}
                   </button>
                 </div>
@@ -132,14 +130,14 @@ export default function Layout() {
             <h1 className="font-headline text-sm font-semibold uppercase tracking-widest text-primary">Precision Dashboard</h1>
           </div>
           <div className="flex items-center gap-6">
-            <button onClick={toggleTheme} className="material-symbols-outlined text-on-surface-variant hover:text-secondary transition-all cursor-pointer">
-              {theme === 'light' ? 'dark_mode' : 'light_mode'}
+            <button onClick={toggleTheme} className="text-on-surface-variant hover:text-secondary transition-all cursor-pointer">
+              {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
             </button>
-            <button onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')} className="material-symbols-outlined text-on-surface-variant hover:text-secondary transition-all cursor-pointer">
-              language
+            <button onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')} className="text-on-surface-variant hover:text-secondary transition-all cursor-pointer">
+              <Globe className="w-5 h-5" />
             </button>
-            <span className="material-symbols-outlined text-on-surface-variant hover:text-secondary transition-all cursor-pointer">notifications</span>
-            <span className="material-symbols-outlined text-on-surface-variant hover:text-secondary transition-all cursor-pointer">settings</span>
+            <Bell className="w-5 h-5 text-on-surface-variant hover:text-secondary transition-all cursor-pointer" />
+            <Settings className="w-5 h-5 text-on-surface-variant hover:text-secondary transition-all cursor-pointer" />
             <div className="h-8 w-8 rounded-full bg-primary-container/10 flex items-center justify-center text-primary-container font-bold text-xs uppercase overflow-hidden border border-primary/10">
               {user?.photoURL || profile?.photoURL ? (
                 <img 
@@ -172,7 +170,7 @@ export default function Layout() {
                   location.pathname === item.path ? "text-primary bg-primary/10" : "text-on-surface-variant"
                 )}
               >
-                <span className="material-symbols-outlined">{item.icon}</span>
+                <item.icon className="w-6 h-6" />
               </Link>
             ))}
           </div>
@@ -202,9 +200,7 @@ export default function Layout() {
                       : "text-on-surface-variant hover:text-primary hover:bg-surface-container-low"
                   )}
                 >
-                  <span className={cn("material-symbols-outlined text-[20px]", location.pathname === item.path && "fill-1")}>
-                    {item.icon}
-                  </span>
+                  <item.icon className={cn("w-5 h-5", location.pathname === item.path && "text-primary")} />
                   {item.name}
                 </Link>
               ))}
@@ -217,7 +213,7 @@ export default function Layout() {
               onClick={toggleTheme}
               className="p-2 rounded-lg text-primary hover:bg-surface-container-low transition-all"
             >
-              <span className="material-symbols-outlined">{theme === 'light' ? 'dark_mode' : 'light_mode'}</span>
+              {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
             </button>
 
             {/* Language Switcher */}
@@ -225,11 +221,11 @@ export default function Layout() {
               onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
               className="p-2 rounded-lg text-primary hover:bg-surface-container-low transition-all"
             >
-              <span className="material-symbols-outlined">language</span>
+              <Globe className="w-5 h-5" />
             </button>
 
             <div className="p-2 hover:bg-surface-container-low transition-colors rounded-lg cursor-pointer active:scale-95 transition-transform">
-              <span className="material-symbols-outlined text-primary dark:text-primary-container">notifications</span>
+              <Bell className="w-5 h-5 text-primary dark:text-primary-container" />
             </div>
             
             <div className="flex items-center gap-3 ml-2">
@@ -249,7 +245,7 @@ export default function Layout() {
                 onClick={handleLogout}
                 className="p-2 text-on-surface-variant hover:text-error hover:bg-error-container/10 rounded-full transition-all"
               >
-                <span className="material-symbols-outlined">logout</span>
+                <LogOut className="w-5 h-5" />
               </button>
             </div>
           </div>
@@ -276,9 +272,7 @@ export default function Layout() {
                   : "text-on-surface-variant opacity-70 hover:opacity-100"
               )}
             >
-              <span className={cn("material-symbols-outlined", location.pathname === item.path && "fill-1")}>
-                {item.icon}
-              </span>
+              <item.icon className={cn("w-6 h-6", location.pathname === item.path && "text-primary")} />
               <span className="font-headline text-[10px] font-bold tracking-wide uppercase mt-0.5">
                 {item.name}
               </span>

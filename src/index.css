@@ -44,10 +44,6 @@
 }
 
 @layer components {
-  .material-symbols-outlined {
-    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-  }
-  
   .bg-primary-gradient {
     background: linear-gradient(135deg, #004c52 0%, #00666e 100%);
   }

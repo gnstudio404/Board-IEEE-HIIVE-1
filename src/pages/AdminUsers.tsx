@@ -248,29 +248,33 @@ export default function AdminUsers() {
                     <td className="py-4 px-2 text-on-surface-variant text-sm">{u.email}</td>
                     <td className="py-4 px-2">
                       <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                        u.role === 'organizer'
-                          ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
-                          : u.role === 'admin' 
-                            ? 'bg-primary/10 text-primary border border-primary/20' 
-                            : 'bg-surface-container-high text-on-surface-variant border border-outline-variant/20'
+                        u.email === 'omarwork1011@gmail.com'
+                          ? 'bg-amber-600 text-white border border-amber-500 shadow-sm shadow-amber-200'
+                          : u.role === 'organizer'
+                            ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
+                            : u.role === 'admin' 
+                              ? 'bg-primary/10 text-primary border border-primary/20' 
+                              : 'bg-surface-container-high text-on-surface-variant border border-outline-variant/20'
                       }`}>
-                        {u.role === 'organizer' ? <Shield className="w-3.5 h-3.5" /> : u.role === 'admin' ? <ShieldCheck className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
-                        {u.role === 'organizer' ? (language === 'ar' ? 'منظم' : 'Organizer') : u.role === 'admin' ? (language === 'ar' ? 'مسؤول' : 'Admin') : (language === 'ar' ? 'متقدم' : 'Applicant')}
+                        {u.email === 'omarwork1011@gmail.com' ? <ShieldCheck className="w-3.5 h-3.5" /> : u.role === 'organizer' ? <Shield className="w-3.5 h-3.5" /> : u.role === 'admin' ? <ShieldCheck className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
+                        {u.email === 'omarwork1011@gmail.com' 
+                          ? (language === 'ar' ? 'المالك' : 'Owner')
+                          : u.role === 'organizer' ? (language === 'ar' ? 'منظم' : 'Organizer') : u.role === 'admin' ? (language === 'ar' ? 'مسؤول' : 'Admin') : (language === 'ar' ? 'عضو' : 'Member')}
                       </span>
                     </td>
                     <td className="py-4 px-2 text-right">
-                      {u.uid !== currentUser?.uid && u.email !== 'omarwork1011@gmail.com' && (
-                        <div className="flex items-center justify-end gap-2">
+                      {u.email !== 'omarwork1011@gmail.com' && (
+                        <div className="flex items-center justify-end gap-3">
                           {isSuperAdmin && (
-                            <div className="flex items-center gap-1 bg-surface-container-high/50 p-1 rounded-xl border border-outline-variant/10">
+                            <div className="flex items-center gap-1.5 bg-surface-container-high p-1.5 rounded-2xl border border-outline-variant/30 shadow-md">
                               {/* Promote Button */}
                               {u.role !== 'organizer' && (
                                 <button
                                   onClick={() => setConfirmAction({ type: 'promote', user: u })}
-                                  className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                                  className="w-9 h-9 flex items-center justify-center text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-all border border-emerald-100"
                                   title={language === 'ar' ? 'ترقية الرتبة' : 'Promote Rank'}
                                 >
-                                  <ArrowUp className="w-4 h-4" />
+                                  <ArrowUp className="w-5 h-5 font-black" />
                                 </button>
                               )}
                               
@@ -278,32 +282,34 @@ export default function AdminUsers() {
                               {u.role !== 'applicant' && (
                                 <button
                                   onClick={() => setConfirmAction({ type: 'demote', user: u })}
-                                  className="p-1.5 text-error hover:bg-error/5 rounded-lg transition-all"
-                                  title={language === 'ar' ? 'تنزيل الرتبة' : 'Demote Rank'}
+                                  className="w-9 h-9 flex items-center justify-center text-error bg-error/5 hover:bg-error/10 rounded-xl transition-all border border-error/10"
+                                  title={language === 'ar' ? 'تنزيل أو تخفيض الرتبة' : 'Demote Rank'}
                                 >
-                                  <ArrowDown className="w-4 h-4" />
+                                  <ArrowDown className="w-5 h-5 font-black" />
                                 </button>
                               )}
                             </div>
                           )}
                           
-                          <button
-                            onClick={() => setConfirmAction({ type: 'block', user: u })}
-                            className={`p-2 rounded-lg transition-all ${u.isBlocked ? 'text-emerald-600 hover:bg-emerald-50' : 'text-amber-600 hover:bg-amber-50'}`}
-                            title={u.isBlocked ? t('admin.unblock') : t('admin.block')}
-                          >
-                            {u.isBlocked ? <Unlock className="w-5 h-5" /> : <Ban className="w-5 h-5" />}
-                          </button>
-
-                          {(isSuperAdmin || (u.role !== 'admin' && u.role !== 'organizer')) && (
+                          <div className="flex items-center gap-1.5">
                             <button
-                              onClick={() => setConfirmAction({ type: 'delete', user: u })}
-                              className="p-2 text-error hover:bg-error/10 rounded-lg transition-all"
-                              title={t('admin.deleteUser')}
+                              onClick={() => setConfirmAction({ type: 'block', user: u })}
+                              className={`p-2.5 rounded-xl transition-all border ${u.isBlocked ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}
+                              title={u.isBlocked ? t('admin.unblock') : t('admin.block')}
                             >
-                              <Trash2 className="w-5 h-5" />
+                              {u.isBlocked ? <Unlock className="w-5 h-5" /> : <Ban className="w-5 h-5" />}
                             </button>
-                          )}
+
+                            {(isSuperAdmin || (u.role !== 'admin' && u.role !== 'organizer')) && (
+                              <button
+                                onClick={() => setConfirmAction({ type: 'delete', user: u })}
+                                className="p-2.5 bg-error/5 text-error hover:bg-error/10 rounded-xl transition-all border border-error/10"
+                                title={t('admin.deleteUser')}
+                              >
+                                <Trash2 className="w-5 h-5" />
+                              </button>
+                            )}
+                          </div>
                         </div>
                       )}
                     </td>

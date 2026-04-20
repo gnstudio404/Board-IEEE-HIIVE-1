@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { collection, getDocs, query, where, orderBy, writeBatch, doc, limit } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { AttendanceRecord, Session } from '../types';
@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import { ChartDownloadButton } from '../components/ChartDownloadButton';
 
 export default function AdminAttendance() {
   const { t, language } = useLanguage();
@@ -21,6 +22,10 @@ export default function AdminAttendance() {
   const [selectedSession, setSelectedSession] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+
+  const sessionChartRef = useRef<HTMLDivElement>(null);
+  const distributionChartRef = useRef<HTMLDivElement>(null);
+  const monthlyChartRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchData();
@@ -256,11 +261,14 @@ export default function AdminAttendance() {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-surface-container-lowest rounded-3xl p-8 border border-outline-variant/10 shadow-sm">
-          <h3 className="font-headline font-bold text-xl mb-8 flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-primary" />
-            {language === 'ar' ? 'الحضور لكل جلسة' : 'Attendance per Session'}
-          </h3>
+        <div ref={sessionChartRef} className="lg:col-span-2 bg-surface-container-lowest rounded-3xl p-8 border border-outline-variant/10 shadow-sm relative">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="font-headline font-bold text-xl flex items-center gap-2 text-on-surface">
+              <BarChart3 className="w-5 h-5 text-primary" />
+              {language === 'ar' ? 'الحضور لكل جلسة' : 'Attendance per Session'}
+            </h3>
+            <ChartDownloadButton elementRef={sessionChartRef} filename="attendance-per-session" />
+          </div>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={sessionStats}>
@@ -277,11 +285,14 @@ export default function AdminAttendance() {
           </div>
         </div>
 
-        <div className="bg-surface-container-lowest rounded-3xl p-8 border border-outline-variant/10 shadow-sm">
-          <h3 className="font-headline font-bold text-xl mb-8 flex items-center gap-2">
-            <PieChartIcon className="w-5 h-5 text-primary" />
-            {language === 'ar' ? 'التوزيع العام' : 'Overall Distribution'}
-          </h3>
+        <div ref={distributionChartRef} className="bg-surface-container-lowest rounded-3xl p-8 border border-outline-variant/10 shadow-sm relative">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="font-headline font-bold text-xl flex items-center gap-2 text-on-surface">
+              <PieChartIcon className="w-5 h-5 text-primary" />
+              {language === 'ar' ? 'التوزيع العام' : 'Overall Distribution'}
+            </h3>
+            <ChartDownloadButton elementRef={distributionChartRef} filename="overall-distribution" />
+          </div>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -392,11 +403,14 @@ export default function AdminAttendance() {
       </div>
 
       {/* Monthly Performance Chart */}
-      <div className="bg-surface-container-lowest rounded-[2.5rem] p-8 border border-outline-variant/10 shadow-sm">
-        <h3 className="font-headline font-bold text-xl mb-8 flex items-center gap-2">
-          <Calendar className="w-5 h-5 text-primary" />
-          {language === 'ar' ? 'الأداء الشهري العام' : 'Overall Monthly Performance'}
-        </h3>
+      <div ref={monthlyChartRef} className="bg-surface-container-lowest rounded-[2.5rem] p-8 border border-outline-variant/10 shadow-sm relative">
+        <div className="flex items-center justify-between mb-8">
+          <h3 className="font-headline font-bold text-xl flex items-center gap-2 text-on-surface">
+            <Calendar className="w-5 h-5 text-primary" />
+            {language === 'ar' ? 'الأداء الشهري العام' : 'Overall Monthly Performance'}
+          </h3>
+          <ChartDownloadButton elementRef={monthlyChartRef} filename="monthly-performance" />
+        </div>
         <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={monthlyStats}>

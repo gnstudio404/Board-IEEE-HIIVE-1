@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { Session, AttendanceRecord } from '../types';
@@ -12,6 +12,7 @@ import autoTable from 'jspdf-autotable';
 import { toast } from 'sonner';
 import { FileDown, ArrowLeft, Users, Clock, TrendingUp, Download } from 'lucide-react';
 import { motion } from 'motion/react';
+import { ChartDownloadButton } from './ChartDownloadButton';
 
 interface SessionDetailsProps {
   session: Session;
@@ -22,6 +23,9 @@ export const SessionDetails: React.FC<SessionDetailsProps> = ({ session, onBack 
   const { t, language, isRTL } = useLanguage();
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const distributionChartRef = useRef<HTMLDivElement>(null);
+  const watchTimeChartRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchAttendance();
@@ -155,8 +159,11 @@ export const SessionDetails: React.FC<SessionDetailsProps> = ({ session, onBack 
       </div>
 
       <div className="flex flex-col gap-8">
-        <div className="bg-surface-container-lowest p-8 rounded-3xl border border-outline-variant/10 shadow-sm">
-          <h3 className="font-headline text-xl font-bold text-on-surface mb-8">{t('admin.distribution')}</h3>
+        <div ref={distributionChartRef} className="bg-surface-container-lowest p-8 rounded-3xl border border-outline-variant/10 shadow-sm relative">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="font-headline text-xl font-bold text-on-surface">{t('admin.distribution')}</h3>
+            <ChartDownloadButton elementRef={distributionChartRef} filename={`${session.name}-distribution`} />
+          </div>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -180,8 +187,11 @@ export const SessionDetails: React.FC<SessionDetailsProps> = ({ session, onBack 
           </div>
         </div>
 
-        <div className="bg-surface-container-lowest p-8 rounded-3xl border border-outline-variant/10 shadow-sm">
-          <h3 className="font-headline text-xl font-bold text-on-surface mb-8">{t('admin.watchTimeDist')}</h3>
+        <div ref={watchTimeChartRef} className="bg-surface-container-lowest p-8 rounded-3xl border border-outline-variant/10 shadow-sm relative">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="font-headline text-xl font-bold text-on-surface">{t('admin.watchTimeDist')}</h3>
+            <ChartDownloadButton elementRef={watchTimeChartRef} filename={`${session.name}-watch-time`} />
+          </div>
           <div className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={durationData} margin={{ top: 10, right: 30, left: 0, bottom: 40 }}>
